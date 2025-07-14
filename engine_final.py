@@ -209,6 +209,9 @@ class UltimatePrecisionEngine:
         
         logger.info(f"Cleaning watchlist data: {len(df)} initial rows")
         
+        # Store original dataframe for potential restoration
+        original_df = df.copy()
+        
         # 1. Rename columns to standard mapping with error handling
         original_columns = df.columns.tolist()
         
@@ -305,13 +308,23 @@ class UltimatePrecisionEngine:
         if len(df) == 0:
             logger.error("❌ All data was filtered out during cleaning! Restoring original data with minimal cleaning...")
             # Restore original data with just basic ticker cleaning
-            df = self.watchlist_df.copy()
+            df = original_df.copy()  # Use original dataframe reference
             if 'ticker' in df.columns:
                 df['ticker'] = df['ticker'].astype(str).str.upper().str.strip()
                 df = df[~df['ticker'].isin(['NAN', 'NONE', '', 'NULL', 'NA'])]
                 df = df.dropna(subset=['ticker'])
                 df = df[df['ticker'].str.len() > 0]
                 df = df.drop_duplicates(subset=['ticker'], keep='first')
+            
+            # Ensure numeric columns are properly converted after restoration
+            numeric_columns = [
+                'price', 'pe', 'eps_current', 'eps_change_pct', 'vol_1d', 'rvol',
+                'ret_1d', 'ret_7d', 'ret_30d', 'ret_3m', 'from_low_pct', 'from_high_pct'
+            ]
+            
+            for col in numeric_columns:
+                if col in df.columns:
+                    df[col] = pd.to_numeric(df[col], errors='coerce')
         
         logger.info(f"✅ Watchlist cleaned: {len(df)} final rows")
         return df.reset_index(drop=True)
@@ -455,8 +468,18 @@ class UltimatePrecisionEngine:
             'sectors_available': not self.sectors_df.empty,
             'returns_data_available': not self.returns_df.empty,
             'duplicate_tickers': self.watchlist_df['ticker'].duplicated().sum() if 'ticker' in self.watchlist_df.columns else 0,
-            'price_coverage': (self.watchlist_df['price'] > 0).sum() / len(self.watchlist_df) * 100 if 'price' in self.watchlist_df.columns else 0
+            'price_coverage': 0  # Default value
         }
+        
+        # Calculate price coverage with error handling
+        if 'price' in self.watchlist_df.columns:
+            try:
+                # Ensure price column is numeric
+                price_series = pd.to_numeric(self.watchlist_df['price'], errors='coerce')
+                additional_metrics['price_coverage'] = (price_series > 0).sum() / len(self.watchlist_df) * 100
+            except Exception as e:
+                logger.warning(f"Could not calculate price coverage: {e}")
+                additional_metrics['price_coverage'] = 0
         
         self.data_quality_report = {
             'overall_score': round(overall_score, 1),
@@ -477,15 +500,27 @@ class UltimatePrecisionEngine:
             self.market_conditions = {'condition': 'unknown', 'confidence': 0}
             return
         
-        # Calculate market breadth
-        positive_stocks = (self.watchlist_df['ret_1d'] > 0).sum()
-        total_stocks = len(self.watchlist_df)
-        market_breadth = (positive_stocks / total_stocks) * 100
+        try:
+            # Ensure ret_1d is numeric for calculations
+            ret_1d_series = pd.to_numeric(self.watchlist_df['ret_1d'], errors='coerce')
+            
+            # Calculate market breadth
+            positive_stocks = (ret_1d_series > 0).sum()
+            total_stocks = len(self.watchlist_df)
+            market_breadth = (positive_stocks / total_stocks) * 100
+        except Exception as e:
+            logger.warning(f"Could not calculate market conditions: {e}")
+            self.market_conditions = {'condition': 'unknown', 'confidence': 0}
+            return
         
         # Calculate average sector performance if available
         avg_sector_performance = 0
         if not self.sectors_df.empty and 'sector_ret_1d' in self.sectors_df.columns:
-            avg_sector_performance = self.sectors_df['sector_ret_1d'].mean()
+            try:
+                sector_rets = pd.to_numeric(self.sectors_df['sector_ret_1d'], errors='coerce')
+                avg_sector_performance = sector_rets.mean()
+            except:
+                avg_sector_performance = 0
         
         # Determine market condition
         if (market_breadth >= MARKET_CONDITIONS['bull_market']['market_breadth_min'] and 
