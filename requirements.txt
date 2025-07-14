@@ -1,36 +1,15 @@
 # M.A.N.T.R.A. Version 3 FINAL - Requirements
-# Ultimate precision trading system dependencies
+# Optimized for Streamlit Cloud deployment
 
-# Core Streamlit framework
+# Core framework
 streamlit>=1.28.0
 
-# Data processing and analysis
+# Data processing
 pandas>=2.0.0
 numpy>=1.24.0
 
-# Visualization
-plotly>=5.15.0
-
-# Data fetching
+# HTTP requests with retry
 requests>=2.31.0
 
-# Date and time handling (built-in)
-# datetime
-
-# Concurrent processing (built-in)
-# concurrent.futures
-
-# Data structures (built-in)
-# dataclasses
-
-# Warnings handling (built-in)
-# warnings
-
-# Logging (built-in)
-# logging
-
-# Type hints (built-in)
-# typing
-
-# String handling (built-in)
-# io
+# Python standard library modules (included for clarity)
+# datetime, time, logging, typing, dataclasses, warnings - all built-in
