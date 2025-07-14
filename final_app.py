@@ -1,7 +1,7 @@
 """
-final_app.py - M.A.N.T.R.A. Version 3 FINAL Application - BULLETPROOF
-=====================================================================
-Ultimate locked system with bulletproof error handling and robust data processing
+final_app.py - M.A.N.T.R.A. Version 3 FINAL Application - DASHBOARD FIXED
+========================================================================
+Fixed dashboard display issue - ensures dashboard appears after successful data load
 Simple UI with best UX - built for permanent use, no further upgrades needed
 """
 
@@ -25,14 +25,13 @@ configure_streamlit()
 
 class MANTRABulletproofApp:
     """
-    M.A.N.T.R.A. Version 3 FINAL - Ultimate Market Intelligence - BULLETPROOF
+    M.A.N.T.R.A. Version 3 FINAL - Ultimate Market Intelligence - DASHBOARD FIXED
     
-    FIXED ALL CRITICAL ISSUES:
-    - Bulletproof data type handling
-    - Robust error handling at every level
-    - No more string vs numeric operation errors
-    - Complete tolerance for data quality issues
-    - Simple UI with maximum intelligence underneath
+    FIXES APPLIED:
+    - Dashboard display logic fixed
+    - Session state management improved
+    - Cleaner data flow after successful load
+    - Better error handling and user feedback
     """
     
     def __init__(self):
@@ -64,6 +63,9 @@ class MANTRABulletproofApp:
         
         if 'error_message' not in st.session_state:
             st.session_state.error_message = None
+        
+        if 'master_data' not in st.session_state:
+            st.session_state.master_data = pd.DataFrame()
     
     @st.cache_data(ttl=DISPLAY_CONFIG['cache_ttl'])
     def _load_and_process_data(_self):
@@ -131,7 +133,7 @@ class MANTRABulletproofApp:
             return False, error_msg, None, None, None, 0
     
     def run(self):
-        """Main application runner with bulletproof error handling"""
+        """Main application runner with improved dashboard display logic"""
         
         try:
             # Render header
@@ -140,15 +142,24 @@ class MANTRABulletproofApp:
             # Data loading section
             self._render_data_loading_section()
             
-            # Main content based on data availability
-            if st.session_state.data_loaded and hasattr(self.engine, 'master_df') and not self.engine.master_df.empty:
-                # Success: Render main dashboard
+            # IMPROVED LOGIC: Check if we have valid data to display dashboard
+            has_data = (
+                st.session_state.data_loaded and 
+                not st.session_state.master_data.empty and
+                len(st.session_state.master_data) > 0
+            )
+            
+            if has_data:
+                # SUCCESS: Show the main dashboard
+                st.success(f"✅ **System Ready:** {len(st.session_state.master_data):,} stocks analyzed")
+                
                 self._render_daily_edge_dashboard()
                 self._render_market_intelligence_panel()
                 self._render_advanced_features()
                 self.ui.render_footer()
+                
             else:
-                # No data: Show getting started guide
+                # NO DATA: Show getting started guide
                 self._render_getting_started_guide()
                 
                 # Show error message if there was one
@@ -186,7 +197,7 @@ class MANTRABulletproofApp:
                 st.exception(e)
     
     def _render_data_loading_section(self):
-        """Render data loading and refresh section with bulletproof handling"""
+        """Render data loading and refresh section with improved feedback"""
         
         col1, col2, col3 = st.columns([2, 1, 1])
         
@@ -213,7 +224,7 @@ class MANTRABulletproofApp:
                         self._load_data()
     
     def _load_data(self):
-        """Load data with comprehensive error handling and user feedback"""
+        """Load data with comprehensive error handling and improved state management"""
         
         # Clear any previous error messages
         st.session_state.error_message = None
@@ -236,7 +247,8 @@ class MANTRABulletproofApp:
                     success, message, master_df, quality_report, market_summary, processing_time = result
                     
                     if success and master_df is not None and not master_df.empty:
-                        # Update session state
+                        # IMPROVED: Store data in session state for reliable access
+                        st.session_state.master_data = master_df
                         st.session_state.data_loaded = True
                         st.session_state.last_load_time = datetime.now()
                         
@@ -260,7 +272,7 @@ class MANTRABulletproofApp:
                         st.session_state.quality_report = quality_report
                         st.session_state.market_summary = market_summary
                         
-                        # Store data in engine
+                        # Store data in engine for compatibility
                         self.engine.master_df = master_df
                         
                         # Success message with stats
@@ -275,8 +287,7 @@ class MANTRABulletproofApp:
                         
                         st.success(success_msg)
                         
-                        # Auto-rerun to show dashboard
-                        time.sleep(1)
+                        # IMPROVED: Immediate rerun to show dashboard
                         st.rerun()
                     
                     else:
@@ -284,18 +295,21 @@ class MANTRABulletproofApp:
                         error_msg = f"Data processing completed but no usable stocks found: {message}"
                         st.error(f"❌ {error_msg}")
                         st.session_state.error_message = error_msg
+                        st.session_state.data_loaded = False
                         
                 else:  # Error case
                     success, message = result[:2]
                     error_msg = f"Data loading failed: {message}"
                     st.error(f"❌ {error_msg}")
                     st.session_state.error_message = error_msg
+                    st.session_state.data_loaded = False
                     
             except Exception as e:
                 loading_placeholder.empty()
                 error_msg = f"Unexpected error during data loading: {str(e)}"
                 st.error(f"❌ {error_msg}")
                 st.session_state.error_message = error_msg
+                st.session_state.data_loaded = False
     
     def _render_daily_edge_dashboard(self):
         """Render the main Daily Edge dashboard with bulletproof error handling"""
@@ -303,23 +317,45 @@ class MANTRABulletproofApp:
         try:
             self.ui.section_header("📈 Today's Market Edge", "🎯")
             
+            # Get data from session state for reliability
+            master_df = st.session_state.master_data
+            
+            if master_df.empty:
+                st.info("🔍 No data available for analysis.")
+                return
+            
             # Get top opportunities
             try:
-                top_opportunities = self.engine.get_top_opportunities(limit=10)
+                # Filter for high-confidence opportunities
+                top_opportunities = master_df[
+                    (master_df['signal'].isin(['STRONG_BUY', 'BUY', 'ACCUMULATE'])) &
+                    (master_df['confidence'] >= 60)
+                ].head(10)
             except:
-                top_opportunities = pd.DataFrame()
+                top_opportunities = master_df.head(10)
             
             if top_opportunities.empty:
                 st.info("🔍 No high-confidence opportunities found today. Market conditions may require patience.")
+                
+                # Show overall signal distribution
+                try:
+                    signal_counts = master_df['signal'].value_counts()
+                    st.markdown("### 📊 Current Signal Distribution")
+                    for signal, count in signal_counts.items():
+                        st.write(f"• **{signal}**: {count} stocks")
+                except:
+                    pass
                 return
             
-            # Separate strong buy and buy signals
+            # Separate signals by type
             try:
                 strong_buy_stocks = top_opportunities[top_opportunities['signal'] == 'STRONG_BUY']
                 buy_stocks = top_opportunities[top_opportunities['signal'] == 'BUY']
+                accumulate_stocks = top_opportunities[top_opportunities['signal'] == 'ACCUMULATE']
             except:
                 strong_buy_stocks = pd.DataFrame()
-                buy_stocks = top_opportunities.copy()
+                buy_stocks = pd.DataFrame()
+                accumulate_stocks = top_opportunities.copy()
             
             # Strong Buy Section
             if not strong_buy_stocks.empty:
@@ -339,7 +375,7 @@ class MANTRABulletproofApp:
             # Buy Section
             if not buy_stocks.empty:
                 st.markdown("### 📈 BUY Opportunities")
-                st.markdown(f"*High confidence signals - {len(buy_stocks)} additional opportunities*")
+                st.markdown(f"*High confidence signals - {len(buy_stocks)} opportunities*")
                 
                 # Show first 3 by default, rest in expander
                 display_count = min(3, len(buy_stocks))
@@ -358,9 +394,33 @@ class MANTRABulletproofApp:
                                 self.ui.opportunity_card(stock, show_explanation=False)
                             except Exception as e:
                                 st.warning(f"Could not display {stock.get('ticker', 'stock')}: {str(e)}")
-                                
+            
+            # Accumulate Section
+            if not accumulate_stocks.empty and strong_buy_stocks.empty and buy_stocks.empty:
+                st.markdown("### 📊 ACCUMULATE Opportunities")
+                st.markdown(f"*Good opportunities for gradual building - {len(accumulate_stocks)} stocks*")
+                
+                for idx, stock in accumulate_stocks.head(5).iterrows():
+                    try:
+                        self.ui.opportunity_card(stock, show_explanation=True)
+                    except Exception as e:
+                        st.warning(f"Could not display {stock.get('ticker', 'stock')}: {str(e)}")
+                        
         except Exception as e:
             st.error(f"Error rendering dashboard: {str(e)}")
+            # Show basic stock count as fallback
+            try:
+                master_df = st.session_state.master_data
+                if not master_df.empty:
+                    st.info(f"📊 **Data Available:** {len(master_df):,} stocks analyzed successfully")
+                    
+                    # Show signal distribution
+                    signal_counts = master_df['signal'].value_counts()
+                    st.markdown("**Signal Distribution:**")
+                    for signal, count in signal_counts.items():
+                        st.write(f"• {signal}: {count} stocks")
+            except:
+                pass
     
     def _render_detailed_stock_analysis(self, stock):
         """Render detailed analysis for a specific stock with error handling"""
@@ -484,25 +544,33 @@ class MANTRABulletproofApp:
             
             market_summary = st.session_state.market_summary
             processing_stats = st.session_state.processing_stats
+            master_df = st.session_state.master_data
             
             with col1:
                 try:
-                    total_stocks = processing_stats.get('total_stocks', 0) if processing_stats else 0
+                    total_stocks = len(master_df) if not master_df.empty else 0
                     st.metric("📊 Stocks Analyzed", f"{total_stocks:,}")
                 except:
                     st.metric("📊 Stocks Analyzed", "N/A")
             
             with col2:
                 try:
-                    signals_generated = processing_stats.get('signals_generated', 0) if processing_stats else 0
-                    st.metric("🎯 Action Signals", signals_generated)
+                    if not master_df.empty:
+                        action_signals = len(master_df[master_df['signal'].isin(['STRONG_BUY', 'BUY', 'ACCUMULATE'])])
+                        st.metric("🎯 Action Signals", action_signals)
+                    else:
+                        st.metric("🎯 Action Signals", "0")
                 except:
                     st.metric("🎯 Action Signals", "N/A")
             
             with col3:
                 try:
-                    market_breadth = market_summary.get('market_breadth', 50) if market_summary else 50
-                    st.metric("📈 Market Breadth", f"{market_breadth:.0f}%")
+                    if not master_df.empty and 'ret_1d' in master_df.columns:
+                        positive_stocks = (pd.to_numeric(master_df['ret_1d'], errors='coerce') > 0).sum()
+                        market_breadth = (positive_stocks / len(master_df)) * 100
+                        st.metric("📈 Market Breadth", f"{market_breadth:.0f}%")
+                    else:
+                        st.metric("📈 Market Breadth", "50%")
                 except:
                     st.metric("📈 Market Breadth", "50%")
             
@@ -513,34 +581,17 @@ class MANTRABulletproofApp:
                 except:
                     st.metric("✅ Data Quality", "N/A")
             
-            # Market condition and sector performance
-            if market_summary:
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    try:
-                        # Market condition
-                        market_conditions = market_summary.get('market_conditions', {})
-                        condition = market_conditions.get('condition', 'Unknown')
-                        confidence = market_conditions.get('confidence', 0)
-                        
-                        condition_display = condition.replace('_', ' ').title()
-                        st.info(f"🌊 **Market Condition:** {condition_display} ({confidence:.0f}% confidence)")
-                    except:
-                        st.info("🌊 **Market Condition:** Analysis in progress")
-                
-                with col2:
-                    try:
-                        # Signal distribution
-                        signal_dist = market_summary.get('signal_distribution', {})
-                        if signal_dist:
-                            strong_buy = signal_dist.get('STRONG_BUY', 0)
-                            buy = signal_dist.get('BUY', 0)
-                            accumulate = signal_dist.get('ACCUMULATE', 0)
-                            
-                            st.success(f"🎯 **Today's Signals:** {strong_buy} Strong Buy, {buy} Buy, {accumulate} Accumulate")
-                    except:
-                        st.success("🎯 **Today's Signals:** Analysis complete")
+            # Signal distribution summary
+            if not master_df.empty:
+                try:
+                    signal_counts = master_df['signal'].value_counts()
+                    strong_buy = signal_counts.get('STRONG_BUY', 0)
+                    buy = signal_counts.get('BUY', 0)
+                    accumulate = signal_counts.get('ACCUMULATE', 0)
+                    
+                    st.success(f"🎯 **Today's Signals:** {strong_buy} Strong Buy, {buy} Buy, {accumulate} Accumulate")
+                except:
+                    st.success("🎯 **Today's Signals:** Analysis complete")
             
             # Sector performance (if available)
             if hasattr(self.engine, 'sectors_df') and not self.engine.sectors_df.empty:
@@ -640,7 +691,9 @@ class MANTRABulletproofApp:
     def _render_stock_explorer(self):
         """Render stock explorer with error handling"""
         
-        if not hasattr(self.engine, 'master_df') or self.engine.master_df.empty:
+        master_df = st.session_state.master_data
+        
+        if master_df.empty:
             st.info("Load data to access stock explorer.")
             return
         
@@ -648,19 +701,29 @@ class MANTRABulletproofApp:
             st.markdown("**🔍 Explore and filter all analyzed stocks**")
             
             # Get filters
-            sectors, categories, signals, min_score, min_confidence = self.ui.render_simple_filters(self.engine.master_df)
+            sectors, categories, signals, min_score, min_confidence = self.ui.render_simple_filters(master_df)
             
             # Apply filters
             try:
-                filtered_df = self.engine.get_filtered_stocks(
-                    sectors=sectors if sectors else None,
-                    categories=categories if categories else None,
-                    signals=signals if signals else None,
-                    min_score=min_score,
-                    min_confidence=min_confidence
-                )
+                filtered_df = master_df.copy()
+                
+                if sectors:
+                    filtered_df = filtered_df[filtered_df['sector'].isin(sectors)]
+                
+                if categories and 'category' in filtered_df.columns:
+                    filtered_df = filtered_df[filtered_df['category'].isin(categories)]
+                
+                if signals:
+                    filtered_df = filtered_df[filtered_df['signal'].isin(signals)]
+                
+                if min_score > 0 and 'composite_score' in filtered_df.columns:
+                    filtered_df = filtered_df[filtered_df['composite_score'] >= min_score]
+                
+                if min_confidence > 0 and 'confidence' in filtered_df.columns:
+                    filtered_df = filtered_df[filtered_df['confidence'] >= min_confidence]
+                    
             except:
-                filtered_df = self.engine.master_df.copy()
+                filtered_df = master_df.copy()
             
             if filtered_df.empty:
                 st.warning("🔍 No stocks match your current filters. Try adjusting the criteria.")
@@ -792,7 +855,9 @@ class MANTRABulletproofApp:
     def _render_export_panel(self):
         """Render export panel with error handling"""
         
-        if not hasattr(self.engine, 'master_df') or self.engine.master_df.empty:
+        master_df = st.session_state.master_data
+        
+        if master_df.empty:
             st.info("Load data to access export options.")
             return
         
@@ -805,7 +870,7 @@ class MANTRABulletproofApp:
             with col1:
                 export_scope = st.selectbox(
                     "Export Scope",
-                    ["Top Opportunities Only", "All Strong Buy + Buy", "Complete Dataset"],
+                    ["Top Opportunities Only", "All Action Signals", "Complete Dataset"],
                     help="Choose what data to export"
                 )
             
@@ -819,15 +884,13 @@ class MANTRABulletproofApp:
             # Prepare export data
             try:
                 if export_scope == "Top Opportunities Only":
-                    export_df = self.engine.get_top_opportunities(limit=20)
-                elif export_scope == "All Strong Buy + Buy":
-                    export_df = self.engine.master_df[
-                        self.engine.master_df['signal'].isin(['STRONG_BUY', 'BUY'])
-                    ]
+                    export_df = master_df[master_df['signal'].isin(['STRONG_BUY', 'BUY'])].head(20)
+                elif export_scope == "All Action Signals":
+                    export_df = master_df[master_df['signal'].isin(['STRONG_BUY', 'BUY', 'ACCUMULATE'])]
                 else:
-                    export_df = self.engine.master_df
+                    export_df = master_df
             except:
-                export_df = pd.DataFrame()
+                export_df = master_df.copy()
             
             if export_df.empty:
                 st.warning("No data available for export.")
