@@ -32,7 +32,7 @@ SHEET_CONFIG = {
     "id": "1Wa4-4K7hyTTCrqJ0pUzS-NaLFiRQpBgI8KBdHx9obKk",
     "sheets": {
         "watchlist": "2026492216",      # Main comprehensive watchlist
-        "returns": "1234567890",        # Stock return analysis (optional)
+        "returns": "100734077",        # Stock return analysis (optional)
         "sectors": "140104095"          # Sector performance analysis
     }
 }
