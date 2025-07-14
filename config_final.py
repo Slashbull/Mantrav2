@@ -68,7 +68,7 @@ FACTOR_WEIGHTS = {
     "technical": 0.12,      # SMA trends + 52W position
     "sector": 0.06,         # Industry momentum alignment
     "risk": 0.04,           # Multi-dimensional risk assessment
-    "quality": 0.02         # Data completeness + anomaly detection (NEW)
+    "quality": 0.02         # Data completeness + anomaly detection
 }
 
 # Confidence calibration for explainable AI
