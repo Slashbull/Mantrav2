@@ -1,614 +1,135 @@
-# app.py - M.A.N.T.R.A. PROFESSIONAL PRODUCTION VERSION
-# ======================================================
-# Clean, Simple, Beautiful, Bug-Free
-# Designed with proper wireframing and professional UX principles
+# app.py - M.A.N.T.R.A. ULTRA SIMPLE, FINAL VERSION (2025)
+# "Decisions, not guesses. My Edge, My Logic, My Market."
 
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.graph_objects as go
 from datetime import datetime
-import traceback
 
 from config import CONFIG
 from data_loader import DataLoader
 from professional_signal_engine import ProfessionalSignalEngine
 
-# ==================== PAGE CONFIGURATION ====================
 st.set_page_config(
-    page_title="M.A.N.T.R.A. - Market Intelligence",
+    page_title="M.A.N.T.R.A.",
     page_icon="📊",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
 
-# ==================== DESIGN SYSTEM (CSS) ====================
 st.markdown("""
 <style>
-.main {padding: 0rem 1rem;}
-.block-container {padding-top: 1rem; max-width: 100%;}
-.stock-card {background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.3s ease;}
-.stock-card:hover {box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-2px);}
-div[data-testid="metric-container"] {background-color: #ffffff; border: 1px solid #e0e0e0; padding: 1rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);}
-.stButton > button {background-color: #2962ff; color: white; border: none; border-radius: 6px; padding: 0.5rem 1.5rem; font-weight: 500; transition: all 0.2s;}
-.stButton > button:hover {background-color: #1e40af; box-shadow: 0 2px 8px rgba(41, 98, 255, 0.3);}
-.stTabs [data-baseweb="tab-list"] {background-color: #f5f5f5; border-radius: 8px; padding: 4px; gap: 4px;}
-.stTabs [data-baseweb="tab"] {border-radius: 6px; padding: 0.5rem 1rem; background-color: transparent; border: none;}
-.stTabs [aria-selected="true"] {background-color: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1);}
-h1, h2, h3 {color: #1a1a1a; font-weight: 600;}
-section[data-testid="stSidebar"] {background-color: #fafafa; padding-top: 2rem;}
-.stAlert {border-radius: 6px; padding: 1rem;}
-.dataframe {font-size: 14px; border: 1px solid #e0e0e0;}
-.signal-strong-buy { color: #00c853; font-weight: 600;}
-.signal-buy { color: #43a047; font-weight: 600;}
-.signal-hold { color: #fb8c00; font-weight: 500;}
-.signal-sell { color: #e53935; font-weight: 600;}
+body, .main, .block-container { background: #fcfcfc; }
+.metric-label, h1, h2, h3, .st-emotion-cache-1wmy9hl, .stMarkdown { color: #222 !important; }
+.stButton > button { background: #2962ff; color: #fff; font-weight: 500; border-radius: 6px; }
+.stButton > button:hover { background: #1941a9;}
+.card { background: #fff; border-radius: 12px; box-shadow: 0 1px 6px #d3d3d3; padding: 1.2rem 1.5rem; margin-bottom: 1rem;}
+.top-bar { background: #f7faff; border-radius: 10px; padding: 0.7rem 1rem 0.7rem 1.2rem; margin-bottom: 1.5rem; display: flex; align-items: center;}
+.signal-STRONG_BUY {color: #00c853; font-weight: 600;}
+.signal-BUY {color: #1976d2; font-weight: 600;}
+.signal-HOLD {color: #fb8c00;}
+.signal-SELL {color: #d32f2f;}
+::-webkit-scrollbar {width:6px; background:#f3f3f3;} ::-webkit-scrollbar-thumb {background:#e0e0e0;}
 </style>
 """, unsafe_allow_html=True)
 
-# ==================== SESSION STATE MANAGER ====================
-class SessionManager:
-    @staticmethod
-    def initialize():
-        defaults = {
-            'data_loader': DataLoader(),
-            'signal_engine': ProfessionalSignalEngine(),
-            'data_loaded': False,
-            'signals_df': pd.DataFrame(),
-            'filtered_df': pd.DataFrame(),
-            'last_update': None,
-            'selected_filter': 'top_opportunities',
-            'error_message': None,
-            'loading': False
-        }
-        for key, value in defaults.items():
-            if key not in st.session_state:
-                st.session_state[key] = value
+@st.cache_data(ttl=600, show_spinner="Loading & analyzing data…")
+def get_data():
+    loader = DataLoader()
+    ok, msg = loader.load_and_process()
+    if not ok: st.stop()
+    stocks = loader.get_stocks_data()
+    sector = loader.get_sector_data()
+    signals = ProfessionalSignalEngine().analyze(stocks, sector)
+    return signals
 
-    @staticmethod
-    def get(key, default=None):
-        return st.session_state.get(key, default)
+def filter_data(df, tag, search, conf_min):
+    if tag != "All": df = df[df.signal == tag]
+    if search: df = df[df.ticker.str.contains(search, case=False) | df.company_name.str.contains(search, case=False)]
+    df = df[df.confidence >= conf_min]
+    return df
 
-    @staticmethod
-    def set(key, value):
-        st.session_state[key] = value
+# === Top Bar Controls ===
+with st.container():
+    st.markdown("<div class='top-bar'>"
+                "<span style='font-size:1.4rem; font-weight:700; letter-spacing:1px;'>M.A.N.T.R.A. &mdash; Personal Stock Intelligence</span>"
+                "</div>", unsafe_allow_html=True)
 
-SessionManager.initialize()
+col1, col2, col3, col4, col5 = st.columns([2,2,2,3,3])
 
-# ==================== SMART FILTERS ====================
-SMART_FILTERS = {
-    "top_opportunities": {
-        "name": "🎯 Top Opportunities",
-        "description": "Best overall trading opportunities",
-        "filter": lambda df: df[df['signal'].isin(['STRONG_BUY', 'BUY'])].nlargest(20, 'confidence')
-    },
-    "momentum_leaders": {
-        "name": "🚀 Momentum Leaders",
-        "description": "Stocks with strongest momentum",
-        "filter": lambda df: df[(df['momentum_score'] > 75) & (df['ret_30d'] > 10)].nlargest(20, 'momentum_score')
-    },
-    "value_picks": {
-        "name": "💎 Value Picks",
-        "description": "Undervalued opportunities",
-        "filter": lambda df: df[(df['pe'] > 0) & (df['pe'] < 20) & (df['value_score'] > 70)].nlargest(20, 'value_score')
-    },
-    "volume_surge": {
-        "name": "📊 Volume Surge",
-        "description": "Unusual volume activity",
-        "filter": lambda df: df[df['rvol'] > 3].nlargest(20, 'rvol')
-    },
-    "breakout_watch": {
-        "name": "📈 Breakout Watch",
-        "description": "Near 52-week highs",
-        "filter": lambda df: df[df['position_52w'] > 80].nlargest(20, 'technical_score')
-    }
-}
+tags = ["All", "STRONG_BUY", "BUY", "HOLD", "SELL"]
+with col1: tag = st.selectbox("Signal", tags, index=1, key="sigfilter")
+with col2: conf_min = st.slider("Min Confidence %", 0, 100, 70, 1)
+with col3: search = st.text_input("Search (Ticker/Name)", "")
+with col4:
+    if st.button("🔄 Refresh", use_container_width=True): st.cache_data.clear()
+with col5:
+    st.info("Signals: 🟢 Strong Buy / Buy, 🟡 Hold, 🔴 Sell", icon="📈")
 
-# ==================== ERROR HANDLER DECORATOR ====================
-def handle_errors(func):
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            error_msg = f"Error in {func.__name__}: {str(e)}"
-            st.error(error_msg)
-            SessionManager.set('error_message', error_msg)
-            return None
-    return wrapper
+# === Data Load & Filter ===
+signals = get_data()
+signals = signals.copy()
+show_df = filter_data(signals, tag, search, conf_min)
+show_df = show_df.sort_values(["confidence", "signal"], ascending=[False, True])
 
-# ==================== DATA LOADING ====================
-@handle_errors
-def load_data():
-    SessionManager.set('loading', True)
-    progress = st.progress(0)
-    status = st.empty()
-    try:
-        status.text("📥 Loading market data...")
-        progress.progress(25)
-        data_loader = SessionManager.get('data_loader')
-        success, message = data_loader.load_and_process(use_cache=True)
-        if not success:
-            st.error(f"Failed to load data: {message}")
-            return False
-        progress.progress(50)
-        status.text("📊 Processing data...")
-        stocks_df = data_loader.get_stocks_data()
-        sector_df = data_loader.get_sector_data()
-        if stocks_df.empty:
-            st.error("No stock data available")
-            return False
-        progress.progress(75)
-        status.text("🧠 Running intelligent analysis...")
-        signal_engine = SessionManager.get('signal_engine')
-        signals_df = signal_engine.analyze(stocks_df, sector_df)
-        progress.progress(100)
-        status.text("✅ Analysis complete!")
-        SessionManager.set('signals_df', signals_df)
-        SessionManager.set('filtered_df', signals_df)
-        SessionManager.set('data_loaded', True)
-        SessionManager.set('last_update', datetime.now())
-        progress.empty()
-        status.empty()
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.success(f"✅ Analyzed {len(signals_df)} stocks")
-        with col2:
-            buy_signals = len(signals_df[signals_df['signal'].isin(['STRONG_BUY', 'BUY'])])
-            st.success(f"🎯 {buy_signals} buy signals")
-        with col3:
-            avg_confidence = signals_df['confidence'].mean()
-            st.success(f"📊 {avg_confidence:.0f}% avg confidence")
-        with col4:
-            quality = data_loader.get_health()['quality_analysis']['quality_score']
-            st.success(f"✨ {quality:.0f}% data quality")
-        return True
-    except Exception as e:
-        st.error(f"Analysis failed: {str(e)}")
-        traceback.print_exc()
-        return False
-    finally:
-        SessionManager.set('loading', False)
+# === Key KPIs ===
+k1, k2, k3, k4 = st.columns(4)
+with k1:
+    st.metric("Stocks Scanned", len(signals))
+with k2:
+    st.metric("Strong Buy", int((signals.signal == "STRONG_BUY").sum()))
+with k3:
+    st.metric("Buy", int((signals.signal == "BUY").sum()))
+with k4:
+    st.metric("Updated", datetime.now().strftime("%d %b, %I:%M %p"))
 
-# ==================== SIDEBAR ====================
-def render_sidebar():
-    with st.sidebar:
-        st.markdown("""
-        <div style='text-align: center; padding-bottom: 2rem;'>
-            <h1 style='font-size: 2rem; margin: 0;'>📊 M.A.N.T.R.A.</h1>
-            <p style='color: #666; margin: 0;'>Market Analysis & Trading Assistant</p>
-        </div>
-        """, unsafe_allow_html=True)
+st.divider()
 
-        st.markdown("### 📁 Data Management")
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🚀 Load Data", use_container_width=True, type="primary"):
-                load_data()
-        with col2:
-            if st.button("🔄 Refresh", use_container_width=True):
-                SessionManager.get('data_loader').clear_cache()
-                load_data()
-        if SessionManager.get('data_loaded'):
-            last_update = SessionManager.get('last_update')
-            if last_update:
-                mins_ago = (datetime.now() - last_update).seconds // 60
-                st.success(f"✅ Data loaded {mins_ago}m ago")
-        else:
-            st.info("💤 Data not loaded")
-        st.markdown("---")
-        if SessionManager.get('data_loaded'):
-            st.markdown("### 🎯 Smart Filters")
-            for key, filter_info in SMART_FILTERS.items():
-                if st.button(
-                    filter_info['name'],
-                    key=f"filter_{key}",
-                    use_container_width=True,
-                    type="primary" if SessionManager.get('selected_filter') == key else "secondary"
-                ):
-                    SessionManager.set('selected_filter', key)
-                    apply_current_filter()
-            current_filter = SMART_FILTERS[SessionManager.get('selected_filter')]
-            st.info(f"📌 {current_filter['description']}")
-            st.markdown("---")
-            st.markdown("### ⚙️ Advanced Filters")
-            signals_df = SessionManager.get('signals_df', pd.DataFrame())
-            if not signals_df.empty:
-                sectors = ['All'] + sorted(signals_df['sector'].dropna().unique().tolist())
-                selected_sector = st.selectbox("📂 Sector", sectors)
-                signals = ['All'] + sorted(signals_df['signal'].unique().tolist())
-                selected_signal = st.selectbox("🎯 Signal Type", signals)
-                confidence_range = st.slider(
-                    "📊 Confidence Range",
-                    0, 100, (60, 100),
-                    help="Filter by confidence score"
-                )
-                if st.button("🔍 Apply Filters", use_container_width=True):
-                    apply_advanced_filters(selected_sector, selected_signal, confidence_range)
-        st.markdown("---")
-        st.markdown("### 📈 Market Stats")
-        if SessionManager.get('data_loaded'):
-            signals_df = SessionManager.get('signals_df', pd.DataFrame())
-            if not signals_df.empty:
-                total_stocks = len(signals_df)
-                bullish = len(signals_df[signals_df['ret_1d'] > 0]) if 'ret_1d' in signals_df else 0
-                bearish = total_stocks - bullish
-                breadth = (bullish / total_stocks * 100) if total_stocks > 0 else 50
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("📊 Total Stocks", f"{total_stocks:,}")
-                    st.metric("🟢 Bullish", f"{bullish} ({bullish/total_stocks*100:.0f}%)")
-                with col2:
-                    st.metric("🌍 Market Breadth", f"{breadth:.0f}%")
-                    st.metric("🔴 Bearish", f"{bearish} ({bearish/total_stocks*100:.0f}%)")
-        st.markdown("---")
-        with st.expander("❓ Help"):
-            st.markdown("""
-            **Quick Start:**
-            1. Click 'Load Data' to begin
-            2. Use Smart Filters for quick analysis
-            3. Apply Advanced Filters for specific criteria
-            4. Review opportunities in the main panel
-            **Signals:**
-            - 🟢 STRONG_BUY: Highest conviction
-            - 🟢 BUY: High conviction
-            - 🟡 HOLD: Monitor position
-            - 🔴 SELL: Consider exit
-            """)
+# === Main Results Area ===
+if len(show_df) == 0:
+    st.warning("No stocks found. Adjust filter or search.")
+else:
+    st.markdown("#### 🏆 Top Opportunities")
+    topn = show_df.head(12)
+    for i, row in topn.iterrows():
+        st.markdown(f"""<div class='card'>
+        <span style='font-size:1.3rem; font-weight:700;'>{row.ticker}</span>
+        <span style='font-size:1rem; color:#444;'> — {row.company_name[:40]}</span>
+        <span class='signal-{row.signal}' style='float:right;font-weight:700;font-size:1.2rem;'>{row.signal}</span>
+        <br>
+        <b>₹{row.price:,.0f}</b> ({row.sector}) | Conf: <b>{row.confidence:.0f}%</b>
+        <span style='margin-left:1rem;'>30D: <b>{row.ret_30d:+.1f}%</b></span>
+        <span style='margin-left:1rem;'>Vol: <b>{row.rvol:.1f}x</b></span>
+        <span style='margin-left:1rem;'>P/E: <b>{row.pe:.1f if row.pe>0 else 'N/A'}</b></span>
+        <br>
+        <span style='font-size:0.98rem;color:#888;'>{row.key_insights if 'key_insights' in row and row.key_insights else ''}</span>
+        </div>""", unsafe_allow_html=True)
+    st.divider()
+    with st.expander("Show All (Table)", expanded=False):
+        cols = ['ticker','company_name','signal','confidence','price','ret_1d','ret_30d','pe','eps_change_pct','rvol','sector']
+        dfshow = show_df[cols] if all(c in show_df.columns for c in cols) else show_df
+        st.dataframe(dfshow, use_container_width=True, hide_index=True)
 
-def apply_current_filter():
-    signals_df = SessionManager.get('signals_df', pd.DataFrame())
-    if signals_df.empty:
-        return
-    selected_filter = SessionManager.get('selected_filter')
-    filter_func = SMART_FILTERS[selected_filter]['filter']
-    try:
-        filtered_df = filter_func(signals_df)
-        SessionManager.set('filtered_df', filtered_df)
-    except Exception as e:
-        st.error(f"Filter error: {str(e)}")
-        SessionManager.set('filtered_df', pd.DataFrame())
+# === Download Button ===
+st.download_button(
+    label="Download Filtered CSV",
+    data=show_df.to_csv(index=False).encode(),
+    file_name=f"mantra_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+    mime="text/csv",
+    use_container_width=True
+)
 
-def apply_advanced_filters(sector, signal, confidence_range):
-    signals_df = SessionManager.get('signals_df', pd.DataFrame())
-    if signals_df.empty:
-        return
-    filtered = signals_df.copy()
-    if sector != 'All':
-        filtered = filtered[filtered['sector'] == sector]
-    if signal != 'All':
-        filtered = filtered[filtered['signal'] == signal]
-    filtered = filtered[
-        (filtered['confidence'] >= confidence_range[0]) &
-        (filtered['confidence'] <= confidence_range[1])
-    ]
-    SessionManager.set('filtered_df', filtered)
-
-def render_header():
-    col1, col2, col3 = st.columns([3, 1, 1])
-    with col1:
-        st.markdown("# 📊 Market Intelligence Dashboard")
-        st.markdown("*Professional trading insights powered by 8-factor analysis*")
-    with col2:
-        if SessionManager.get('data_loaded'):
-            if st.button("📥 Export", use_container_width=True):
-                export_data()
-    with col3:
-        if st.button("🔄 Refresh View", use_container_width=True):
-            st.rerun()
-
-def export_data():
-    filtered_df = SessionManager.get('filtered_df', pd.DataFrame())
-    if not filtered_df.empty:
-        csv = filtered_df.to_csv(index=False)
-        st.download_button(
-            label="📥 Download CSV",
-            data=csv,
-            file_name=f"mantra_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-            mime='text/csv'
-        )
-
-def render_stock_card(stock):
-    signal_colors = {
-        'STRONG_BUY': '#00c853',
-        'BUY': '#43a047',
-        'HOLD': '#fb8c00',
-        'SELL': '#e53935'
-    }
-    color = signal_colors.get(stock.get('signal', 'HOLD'), '#757575')
-    with st.container():
-        col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
-        with col1:
-            st.markdown(f"### {stock.get('ticker', 'N/A')} - {stock.get('company_name', 'Unknown')[:40]}")
-            st.caption(f"{stock.get('sector', 'Unknown')} | {stock.get('category', 'Unknown')}")
-        with col2:
-            signal = stock.get('signal', 'HOLD')
-            st.markdown(f"<h4 style='color: {color}; text-align: center;'>{signal}</h4>", unsafe_allow_html=True)
-            confidence = stock.get('confidence', 0)
-            st.progress(confidence / 100)
-            st.caption(f"{confidence:.0f}% confidence")
-        with col3:
-            price = stock.get('price', 0)
-            ret_1d = stock.get('ret_1d', 0)
-            st.metric("Price", f"₹{price:,.0f}", f"{ret_1d:+.1f}%")
-        with col4:
-            ret_30d = stock.get('ret_30d', 0)
-            st.metric("30D Return", f"{ret_30d:+.1f}%")
-        st.markdown("---")
-        col1, col2, col3, col4, col5, col6 = st.columns(6)
-        with col1:
-            pe = stock.get('pe', 0)
-            st.metric("P/E", f"{pe:.1f}" if pe > 0 else "N/A")
-        with col2:
-            eps_growth = stock.get('eps_change_pct', 0)
-            st.metric("EPS Growth", f"{eps_growth:+.0f}%")
-        with col3:
-            rvol = stock.get('rvol', 1)
-            st.metric("Rel Volume", f"{rvol:.1f}x")
-        with col4:
-            position = stock.get('position_52w', 50)
-            st.metric("52W Position", f"{position:.0f}%")
-        with col5:
-            momentum = stock.get('momentum_score', 50)
-            st.metric("Momentum", f"{momentum:.0f}")
-        with col6:
-            value = stock.get('value_score', 50)
-            st.metric("Value", f"{value:.0f}")
-        if 'key_insights' in stock and stock['key_insights']:
-            st.info(f"💡 {stock['key_insights']}")
-        st.markdown("---")
-
-def render_main_content():
-    if not SessionManager.get('data_loaded'):
-        st.markdown("""
-        <div style='text-align: center; padding: 4rem 2rem;'>
-            <h1 style='color: #1a1a1a; font-size: 3rem;'>Welcome to M.A.N.T.R.A.</h1>
-            <p style='color: #666; font-size: 1.2rem; margin: 2rem 0;'>
-                Your professional market analysis and trading assistant
-            </p>
-            <div style='display: flex; justify-content: center; gap: 3rem; margin: 3rem 0;'>
-                <div style='text-align: center;'>
-                    <h2 style='color: #2962ff;'>2,200+</h2>
-                    <p>Stocks Analyzed</p>
-                </div>
-                <div style='text-align: center;'>
-                    <h2 style='color: #2962ff;'>8-Factor</h2>
-                    <p>Analysis Engine</p>
-                </div>
-                <div style='text-align: center;'>
-                    <h2 style='color: #2962ff;'>Real-time</h2>
-                    <p>Market Data</p>
-                </div>
-            </div>
-            <p style='font-size: 1.1rem; color: #444;'>
-                👈 Click <strong>"Load Data"</strong> in the sidebar to begin
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-        return
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "🎯 Opportunities",
-        "📊 Market Overview",
-        "🏢 Sector Analysis",
-        "📈 Analytics"
-    ])
-    with tab1:
-        render_opportunities_tab()
-    with tab2:
-        render_market_overview_tab()
-    with tab3:
-        render_sector_analysis_tab()
-    with tab4:
-        render_analytics_tab()
-
-def render_opportunities_tab():
-    filtered_df = SessionManager.get('filtered_df', pd.DataFrame())
-    if filtered_df.empty:
-        st.warning("No stocks match the current filters. Try adjusting your criteria.")
-        return
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Filtered Stocks", len(filtered_df))
-    with col2:
-        strong_buy = len(filtered_df[filtered_df['signal'] == 'STRONG_BUY'])
-        st.metric("Strong Buy", strong_buy)
-    with col3:
-        avg_return = filtered_df['ret_30d'].mean() if 'ret_30d' in filtered_df else 0
-        st.metric("Avg 30D Return", f"{avg_return:.1f}%")
-    with col4:
-        avg_confidence = filtered_df['confidence'].mean() if 'confidence' in filtered_df else 0
-        st.metric("Avg Confidence", f"{avg_confidence:.0f}%")
-    st.markdown("---")
-    display_mode = st.radio(
-        "Display Mode",
-        ["Cards", "Table"],
-        horizontal=True,
-        label_visibility="collapsed"
-    )
-    if display_mode == "Cards":
-        st.markdown("### 🏆 Top Opportunities")
-        for _, stock in filtered_df.head(10).iterrows():
-            render_stock_card(stock)
-    else:
-        st.markdown("### 📊 Opportunities Table")
-        display_columns = [
-            'ticker', 'company_name', 'signal', 'confidence',
-            'price', 'ret_1d', 'ret_30d', 'pe', 'eps_change_pct',
-            'rvol', 'sector', 'momentum_score', 'value_score'
-        ]
-        available_columns = [col for col in display_columns if col in filtered_df.columns]
-        st.dataframe(
-            filtered_df[available_columns],
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                "ticker": st.column_config.TextColumn("Ticker", width="small"),
-                "company_name": st.column_config.TextColumn("Company"),
-                "signal": st.column_config.TextColumn("Signal", width="small"),
-                "confidence": st.column_config.ProgressColumn("Confidence", min_value=0, max_value=100),
-                "price": st.column_config.NumberColumn("Price", format="₹%.0f"),
-                "ret_1d": st.column_config.NumberColumn("1D%", format="%.1f%%"),
-                "ret_30d": st.column_config.NumberColumn("30D%", format="%.1f%%"),
-                "pe": st.column_config.NumberColumn("P/E", format="%.1f"),
-                "eps_change_pct": st.column_config.NumberColumn("EPS Δ%", format="%.0f%%"),
-                "rvol": st.column_config.NumberColumn("Vol", format="%.1fx")
-            }
-        )
-
-def render_market_overview_tab():
-    signals_df = SessionManager.get('signals_df', pd.DataFrame())
-    if signals_df.empty:
-        st.warning("No data available")
-        return
-    st.markdown("### 📊 Market Metrics")
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        total_stocks = len(signals_df)
-        st.metric("Total Stocks", f"{total_stocks:,}")
-    with col2:
-        if 'ret_1d' in signals_df:
-            avg_return = signals_df['ret_1d'].mean()
-            st.metric("Avg Daily Return", f"{avg_return:.2f}%")
-    with col3:
-        buy_signals = len(signals_df[signals_df['signal'].isin(['STRONG_BUY', 'BUY'])])
-        st.metric("Buy Signals", buy_signals)
-    with col4:
-        if 'rvol' in signals_df:
-            high_volume = len(signals_df[signals_df['rvol'] > 2])
-            st.metric("High Volume", high_volume)
-    st.markdown("### 📈 Signal Distribution")
-    signal_counts = signals_df['signal'].value_counts()
-    fig = go.Figure(data=[
-        go.Bar(
-            x=signal_counts.index,
-            y=signal_counts.values,
-            marker_color=['#00c853', '#43a047', '#fb8c00', '#e53935', '#757575'][:len(signal_counts)]
-        )
-    ])
-    fig.update_layout(
-        title="Distribution of Trading Signals",
-        xaxis_title="Signal Type",
-        yaxis_title="Count",
-        height=400,
-        showlegend=False
-    )
-    st.plotly_chart(fig, use_container_width=True)
-    if 'ret_1d' in signals_df:
-        st.markdown("### 🌍 Market Breadth")
-        returns = signals_df['ret_1d']
-        positive = len(returns[returns > 0])
-        negative = len(returns[returns < 0])
-        neutral = len(returns[returns == 0])
-        fig = go.Figure(data=[
-            go.Pie(
-                labels=['Positive', 'Negative', 'Neutral'],
-                values=[positive, negative, neutral],
-                marker_colors=['#00c853', '#e53935', '#757575'],
-                hole=0.4
-            )
-        ])
-        fig.update_layout(
-            title="Market Breadth (1-Day Returns)",
-            height=400
-        )
-        st.plotly_chart(fig, use_container_width=True)
-
-def render_sector_analysis_tab():
-    signals_df = SessionManager.get('signals_df', pd.DataFrame())
-    if signals_df.empty or 'sector' not in signals_df.columns:
-        st.warning("No sector data available")
-        return
-    st.markdown("### 🏢 Sector Performance")
-    sector_stats = signals_df.groupby('sector').agg({
-        'ticker': 'count',
-        'ret_30d': 'mean',
-        'signal': lambda x: (x.isin(['STRONG_BUY', 'BUY'])).sum()
-    }).round(2)
-    sector_stats.columns = ['Count', 'Avg 30D Return', 'Buy Signals']
-    sector_stats = sector_stats.sort_values('Avg 30D Return', ascending=False)
-    fig = go.Figure(data=[
-        go.Bar(
-            x=sector_stats.index,
-            y=sector_stats['Avg 30D Return'],
-            marker_color=np.where(sector_stats['Avg 30D Return'] >= 0, '#00c853', '#e53935'),
-            text=sector_stats['Avg 30D Return'].apply(lambda x: f"{x:.1f}%"),
-            textposition='outside'
-        )
-    ])
-    fig.update_layout(
-        title="Average 30-Day Returns by Sector",
-        xaxis_title="Sector",
-        yaxis_title="Average Return (%)",
-        height=500,
-        xaxis_tickangle=-45
-    )
-    st.plotly_chart(fig, use_container_width=True)
-    st.markdown("### 📊 Sector Statistics")
-    st.dataframe(
-        sector_stats,
-        use_container_width=True,
-        column_config={
-            "Count": st.column_config.NumberColumn("Stocks"),
-            "Avg 30D Return": st.column_config.NumberColumn("Avg Return %", format="%.2f%%"),
-            "Buy Signals": st.column_config.NumberColumn("Buy Signals")
-        }
-    )
-
-def render_analytics_tab():
-    signals_df = SessionManager.get('signals_df', pd.DataFrame())
-    if signals_df.empty:
-        st.warning("No data available for analytics")
-        return
-    st.markdown("### 🔍 Factor Analysis")
-    factor_cols = ['momentum_score', 'value_score', 'growth_score', 'volume_score', 'technical_score']
-    available_factors = [col for col in factor_cols if col in signals_df.columns]
-    if len(available_factors) >= 2:
-        corr_matrix = signals_df[available_factors].corr()
-        fig = go.Figure(data=go.Heatmap(
-            z=corr_matrix.values,
-            x=corr_matrix.columns,
-            y=corr_matrix.columns,
-            colorscale='RdBu',
-            zmid=0,
-            text=corr_matrix.values.round(2),
-            texttemplate='%{text}',
-            textfont={"size": 12}
-        ))
-        fig.update_layout(
-            title="Factor Correlation Matrix",
-            height=500
-        )
-        st.plotly_chart(fig, use_container_width=True)
-    if 'ret_30d' in signals_df:
-        st.markdown("### 📊 Return Distribution")
-        fig = go.Figure(data=[
-            go.Histogram(
-                x=signals_df['ret_30d'],
-                nbinsx=50,
-                marker_color='#2962ff',
-                opacity=0.7
-            )
-        ])
-        fig.update_layout(
-            title="30-Day Return Distribution",
-            xaxis_title="Return (%)",
-            yaxis_title="Count",
-            height=400
-        )
-        st.plotly_chart(fig, use_container_width=True)
-
-# ==================== MAIN APP ====================
-def main():
-    try:
-        render_sidebar()
-        render_header()
-        render_main_content()
-    except Exception as e:
-        st.error(f"Application error: {str(e)}")
-        st.error("Please refresh the page and try again.")
-        if st.button("🔄 Reset Application"):
-            for key in st.session_state:
-                del st.session_state[key]
-            st.rerun()
-
-if __name__ == "__main__":
-    main()
+# === Help / Legend ===
+with st.expander("ℹ️ Legend & Quick Help", expanded=False):
+    st.markdown("""
+- **Signal meanings**:  
+    🟢 **STRONG_BUY** = highest conviction,  
+    🟢 **BUY** = very good setup,  
+    🟡 **HOLD** = neutral/wait,  
+    🔴 **SELL** = avoid or exit.
+- **Confidence** = overall combined score (0-100).
+- **P/E, rvol, 30D return** = standard metrics.
+- You can filter, search, download, or refresh any time.
+- No signals = adjust confidence filter or try "All".
+---
+**Philosophy:** _All edge, no noise. No tips, no confusion. Only what matters._
+""")
