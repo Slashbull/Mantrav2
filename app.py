@@ -1,8 +1,8 @@
 """
-app.py - M.A.N.T.R.A. Ultimate Version
-======================================
-The all-time best UI/UX with enhanced intelligence
-Simple, beautiful, and incredibly powerful
+app.py - M.A.N.T.R.A. ULTIMATE FINAL VERSION
+============================================
+The definitive implementation - Clean, Smart, Powerful
+No further changes after this - Everything optimized for perfection
 """
 
 import streamlit as st
@@ -15,886 +15,974 @@ import time
 
 from config import CONFIG
 from data_loader import DataLoader
-from enhanced_signal_engine import EnhancedSignalEngine
+from ultimate_signal_engine import UltimateSignalEngine
 
-# Page configuration
+# ============================================================================
+# PAGE CONFIGURATION
+# ============================================================================
 st.set_page_config(
-    page_title=f"{CONFIG.APP_ICON} {CONFIG.APP_NAME} Ultimate",
-    page_icon=CONFIG.APP_ICON,
+    page_title="🔱 M.A.N.T.R.A. | Market Intelligence",
+    page_icon="🔱",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
-# Custom CSS for beautiful UI
+# ============================================================================
+# CUSTOM CSS - CLEAN & PROFESSIONAL
+# ============================================================================
 st.markdown("""
 <style>
-    /* Remove default padding */
+    /* Clean, modern design system */
+    :root {
+        --primary: #1e293b;
+        --secondary: #334155;
+        --accent: #3b82f6;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --background: #ffffff;
+        --surface: #f8fafc;
+        --text: #1e293b;
+        --text-secondary: #64748b;
+        --border: #e2e8f0;
+        --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    }
+    
+    /* Remove default padding for clean layout */
     .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
+        padding: 1rem 2rem 2rem 2rem;
+        max-width: none;
     }
     
-    /* Beautiful metrics */
+    /* Sidebar styling */
+    section[data-testid="stSidebar"] {
+        background-color: var(--surface);
+        border-right: 1px solid var(--border);
+    }
+    
+    /* Metrics with clean design */
     div[data-testid="metric-container"] {
-        background-color: #f8f9fa;
-        border: 1px solid #e9ecef;
-        padding: 15px;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        background-color: var(--background);
+        border: 1px solid var(--border);
+        padding: 1rem;
+        border-radius: 0.5rem;
+        box-shadow: var(--shadow);
+        transition: all 0.2s;
     }
     
-    /* Hover effects */
     div[data-testid="metric-container"]:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
     }
     
-    /* Tab styling */
+    /* Clean tabs */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 24px;
+        gap: 0;
+        background-color: var(--surface);
+        padding: 0.5rem;
+        border-radius: 0.5rem;
     }
     
     .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        padding-left: 20px;
-        padding-right: 20px;
-        background-color: #f8f9fa;
-        border-radius: 10px;
+        padding: 0.75rem 1.5rem;
+        background-color: transparent;
+        border-radius: 0.375rem;
+        font-weight: 500;
+        color: var(--text-secondary);
     }
     
     .stTabs [aria-selected="true"] {
-        background-color: #0066cc;
-        color: white;
+        background-color: var(--background);
+        color: var(--accent);
+        box-shadow: var(--shadow);
     }
     
-    /* Expander styling */
-    .streamlit-expanderHeader {
-        background-color: #f8f9fa;
-        border-radius: 10px;
-        font-weight: 600;
-    }
-    
-    /* Success/Info/Warning boxes */
-    .stAlert {
-        border-radius: 10px;
-        border-left: 5px solid;
-    }
-    
-    /* Button styling */
+    /* Buttons */
     .stButton > button {
-        border-radius: 10px;
-        font-weight: 600;
-        transition: all 0.3s ease;
+        background-color: var(--accent);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        font-weight: 500;
+        transition: all 0.2s;
     }
     
     .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        background-color: #2563eb;
+        transform: translateY(-1px);
     }
     
-    /* Selectbox styling */
-    .stSelectbox > div > div {
-        border-radius: 10px;
+    /* Expanders */
+    .streamlit-expanderHeader {
+        background-color: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        font-weight: 500;
+    }
+    
+    /* DataFrames */
+    .dataframe {
+        font-size: 0.875rem;
+    }
+    
+    /* Headers */
+    h1, h2, h3 {
+        font-weight: 600;
+        color: var(--primary);
+    }
+    
+    /* Info boxes */
+    .stAlert {
+        border-radius: 0.5rem;
+        border: 1px solid;
+        font-size: 0.875rem;
+    }
+    
+    /* Progress bars */
+    .stProgress > div > div {
+        background-color: var(--accent);
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Initialize session state
+# ============================================================================
+# SESSION STATE INITIALIZATION
+# ============================================================================
 if 'data_loader' not in st.session_state:
     st.session_state.data_loader = DataLoader()
 if 'signal_engine' not in st.session_state:
-    st.session_state.signal_engine = EnhancedSignalEngine()
+    st.session_state.signal_engine = UltimateSignalEngine()
 if 'last_update' not in st.session_state:
     st.session_state.last_update = None
 if 'selected_filter' not in st.session_state:
-    st.session_state.selected_filter = 'all'
+    st.session_state.selected_filter = 'high_conviction'
+if 'data_loaded' not in st.session_state:
+    st.session_state.data_loaded = False
 
-# Smart Filters Configuration
+# ============================================================================
+# SMART FILTERS CONFIGURATION
+# ============================================================================
 SMART_FILTERS = {
-    "all": {
-        "name": "🎯 All Opportunities",
-        "filter": lambda df: df[df['signal'].isin(['STRONG_BUY', 'BUY', 'ACCUMULATE'])],
-        "description": "All stocks with positive signals"
+    "high_conviction": {
+        "name": "🎯 High Conviction",
+        "icon": "🎯",
+        "description": "Ultra-high confidence opportunities",
+        "filter": lambda df: df[df['composite_score'] >= 85].head(20),
+        "color": "#10b981"
     },
-    "volume_explosion": {
-        "name": "🔥 Volume Explosions",
-        "filter": lambda df: df[(df['rvol'] > 3) & (df['signal'].isin(['STRONG_BUY', 'BUY']))],
-        "description": "Unusual volume with strong signals"
+    "momentum_surge": {
+        "name": "🚀 Momentum Surge",
+        "icon": "🚀",
+        "description": "Accelerating momentum with volume",
+        "filter": lambda df: df[(df['momentum_score'] > 80) & (df['volume_score'] > 70) & (df['ret_7d'] > 5)],
+        "color": "#3b82f6"
     },
-    "hidden_value": {
-        "name": "💎 Hidden Value",
-        "filter": lambda df: df[(df['pe'] < 15) & (df['eps_change_pct'] > 30) & (df['from_low_pct'] < 40)],
-        "description": "Undervalued with growing earnings"
+    "value_gems": {
+        "name": "💎 Value Gems",
+        "icon": "💎",
+        "description": "Undervalued with growth catalysts",
+        "filter": lambda df: df[(df['pe'] < 20) & (df['pe'] > 0) & (df['eps_change_pct'] > 30) & (df['value_score'] > 75)],
+        "color": "#8b5cf6"
     },
-    "breakout_ready": {
-        "name": "🚀 Breakout Ready",
-        "filter": lambda df: df[(df['from_high_pct'] > -10) & (df['ret_7d'] > 5) & (df['rvol'] > 2)],
-        "description": "Near 52W high with momentum"
-    },
-    "sector_leaders": {
-        "name": "👑 Sector Leaders",
-        "filter": lambda df: df[df.apply(lambda x: x['ret_30d'] > x.get('sector_performance', 0) * 1.5, axis=1)],
-        "description": "Outperforming their sectors"
+    "breakout_alerts": {
+        "name": "⚡ Breakout Alerts",
+        "icon": "⚡",
+        "description": "Near 52W high with strong technicals",
+        "filter": lambda df: df[(df['position_52w'] > 80) & (df['rvol'] > 2) & (df['technical_score'] > 75)],
+        "color": "#f59e0b"
     },
     "smart_money": {
         "name": "🏦 Smart Money",
-        "filter": lambda df: df[(df['volume_30d'] > df['volume_3m'] * 1.2) & (df['ret_30d'] > 5)],
-        "description": "Institutional accumulation detected"
+        "icon": "🏦",
+        "description": "Institutional accumulation patterns",
+        "filter": lambda df: df[(df['volume_30d'] > df['volume_3m'] * 1.2) & (df['ret_30d'].between(-5, 15)) & (df['pe'].between(10, 30))],
+        "color": "#14b8a6"
+    },
+    "earnings_stars": {
+        "name": "⭐ Earnings Stars",
+        "icon": "⭐",
+        "description": "Exceptional earnings growth",
+        "filter": lambda df: df[(df['eps_change_pct'] > 50) & (df['growth_score'] > 80) & (df['eps_current'] > 0)],
+        "color": "#ec4899"
+    },
+    "turnaround_plays": {
+        "name": "🔄 Turnaround Plays",
+        "icon": "🔄",
+        "description": "Reversing from oversold conditions",
+        "filter": lambda df: df[(df['position_52w'] < 30) & (df['ret_7d'] > 5) & (df['momentum_quality'] == 'REVERSAL') & (df['pe'].between(5, 25))],
+        "color": "#06b6d4"
     }
 }
 
-def render_header():
-    """Render beautiful header"""
-    # Create gradient header
-    st.markdown("""
-    <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                padding: 2rem; border-radius: 15px; text-align: center; color: white;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.2);'>
-        <h1 style='margin: 0; font-size: 3rem;'>🔱 M.A.N.T.R.A. Ultimate</h1>
-        <p style='margin: 0.5rem 0 0 0; font-size: 1.3rem; opacity: 0.95;'>
-            Market Analysis Neural Trading Research Assistant
-        </p>
-        <p style='margin: 0.5rem 0 0 0; font-size: 1rem; opacity: 0.9;'>
-            Enhanced Intelligence • Pattern Recognition • Smart Signals
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
+# ============================================================================
+# SIDEBAR COMPONENTS
+# ============================================================================
+def render_sidebar():
+    """Render sidebar with controls and filters"""
+    with st.sidebar:
+        # Logo and title
+        st.markdown("""
+        <div style='text-align: center; padding: 1rem 0;'>
+            <h1 style='margin: 0; font-size: 2rem;'>🔱 M.A.N.T.R.A.</h1>
+            <p style='margin: 0.5rem 0 0 0; color: #64748b; font-size: 0.875rem;'>
+                Market Analysis Neural Trading Research Assistant
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("---")
+        
+        # Data Controls
+        st.markdown("### 📊 Data Controls")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🚀 Load Data", type="primary", use_container_width=True):
+                with st.spinner("Loading..."):
+                    success, message = st.session_state.data_loader.load_and_process(use_cache=True)
+                    if success:
+                        stocks_df = st.session_state.data_loader.get_stocks_data()
+                        sector_df = st.session_state.data_loader.get_sector_data()
+                        st.session_state.signals_df = st.session_state.signal_engine.analyze(stocks_df, sector_df)
+                        st.session_state.last_update = datetime.now()
+                        st.session_state.data_loaded = True
+                        st.success("✅ Data loaded!")
+                    else:
+                        st.error(f"❌ {message}")
+        
+        with col2:
+            if st.button("🔄 Refresh", use_container_width=True):
+                st.session_state.data_loader.clear_cache()
+                st.rerun()
+        
+        # Smart Filters
+        if st.session_state.data_loaded:
+            st.markdown("---")
+            st.markdown("### 🎯 Smart Filters")
+            
+            # Display filter buttons
+            for key, filter_config in SMART_FILTERS.items():
+                if st.button(
+                    f"{filter_config['icon']} {filter_config['name']}", 
+                    key=f"filter_{key}",
+                    use_container_width=True,
+                    type="primary" if st.session_state.selected_filter == key else "secondary"
+                ):
+                    st.session_state.selected_filter = key
+                    st.rerun()
+            
+            # Current filter info
+            current_filter = SMART_FILTERS[st.session_state.selected_filter]
+            st.info(f"**Active:** {current_filter['description']}")
+            
+            # Advanced Filters
+            st.markdown("---")
+            st.markdown("### ⚙️ Advanced Filters")
+            
+            # Sector filter
+            all_sectors = ['All'] + sorted(st.session_state.signals_df['sector'].dropna().unique().tolist())
+            selected_sector = st.selectbox("Sector", all_sectors, key="sector_filter")
+            
+            # Signal filter
+            all_signals = ['All'] + sorted(st.session_state.signals_df['signal'].unique().tolist())
+            selected_signal = st.selectbox("Signal Type", all_signals, key="signal_filter")
+            
+            # Confidence slider
+            min_confidence = st.slider("Min Confidence", 0, 100, 60, key="confidence_filter")
+            
+            # PE Range
+            pe_range = st.slider("P/E Range", 0, 100, (0, 50), key="pe_filter")
+            
+            # Market Cap
+            market_cap_options = ['All', 'Large Cap', 'Mid Cap', 'Small Cap']
+            selected_market_cap = st.selectbox("Market Cap", market_cap_options, key="mcap_filter")
+        
+        # Market Stats
+        if st.session_state.data_loaded:
+            st.markdown("---")
+            st.markdown("### 📈 Market Stats")
+            
+            signals_df = st.session_state.signals_df
+            
+            # Calculate stats
+            total_stocks = len(signals_df)
+            buy_signals = len(signals_df[signals_df['signal'].isin(['STRONG_BUY', 'BUY'])])
+            avg_confidence = signals_df['confidence'].mean()
+            
+            # Display stats
+            st.metric("Total Stocks", f"{total_stocks:,}")
+            st.metric("Buy Signals", buy_signals, delta=f"{(buy_signals/total_stocks*100):.1f}%")
+            st.metric("Avg Confidence", f"{avg_confidence:.0f}%")
+            
+            # Market breadth gauge
+            if 'ret_1d' in signals_df.columns:
+                positive = (signals_df['ret_1d'] > 0).sum()
+                breadth = (positive / total_stocks * 100) if total_stocks > 0 else 50
+                
+                fig = go.Figure(go.Indicator(
+                    mode="gauge+number",
+                    value=breadth,
+                    domain={'x': [0, 1], 'y': [0, 1]},
+                    title={'text': "Market Breadth"},
+                    gauge={
+                        'axis': {'range': [None, 100]},
+                        'bar': {'color': "#10b981" if breadth > 60 else "#ef4444" if breadth < 40 else "#f59e0b"},
+                        'steps': [
+                            {'range': [0, 40], 'color': "#fee2e2"},
+                            {'range': [40, 60], 'color': "#fef3c7"},
+                            {'range': [60, 100], 'color': "#d1fae5"}
+                        ],
+                        'threshold': {
+                            'line': {'color': "red", 'width': 4},
+                            'thickness': 0.75,
+                            'value': 90
+                        }
+                    }
+                ))
+                fig.update_layout(height=200, margin=dict(l=20, r=20, t=40, b=20))
+                st.plotly_chart(fig, use_container_width=True)
+        
+        # About
+        st.markdown("---")
+        with st.expander("ℹ️ About M.A.N.T.R.A."):
+            st.markdown("""
+            **Version:** 3.0 ULTIMATE FINAL
+            
+            **Features:**
+            - 🧠 8-Factor Analysis Engine
+            - 🎯 Pattern Recognition
+            - 📊 Volume Intelligence
+            - 🚀 Smart Entry Zones
+            - 📈 Sector Rotation
+            
+            **Data Source:** Live Google Sheets
+            **Update Frequency:** Real-time
+            """)
 
-def render_market_pulse(signals_df):
-    """Render market pulse dashboard"""
+# ============================================================================
+# MAIN CONTENT COMPONENTS
+# ============================================================================
+def render_header():
+    """Render clean header"""
+    col1, col2, col3 = st.columns([2, 1, 1])
+    
+    with col1:
+        st.markdown("# 📊 Market Intelligence Dashboard")
+        if st.session_state.last_update:
+            time_diff = (datetime.now() - st.session_state.last_update).total_seconds() / 60
+            st.caption(f"Last updated {time_diff:.0f} minutes ago")
+    
+    with col2:
+        if st.session_state.data_loaded:
+            current_filter = SMART_FILTERS[st.session_state.selected_filter]
+            st.markdown(f"""
+            <div style='text-align: center; padding: 0.5rem; background-color: {current_filter['color']}20; 
+                        border: 1px solid {current_filter['color']}; border-radius: 0.5rem;'>
+                <span style='color: {current_filter['color']}; font-weight: 600;'>
+                    {current_filter['icon']} {current_filter['name']}
+                </span>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    with col3:
+        if st.session_state.data_loaded:
+            st.download_button(
+                "📥 Export Data",
+                st.session_state.signals_df.to_csv(index=False),
+                f"mantra_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                "text/csv",
+                use_container_width=True
+            )
+
+def render_market_overview(signals_df):
+    """Render market overview section"""
+    st.markdown("## 🌍 Market Overview")
+    
+    # Key metrics
     col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
-        total_stocks = len(signals_df)
-        st.metric(
-            "📊 Stocks Analyzed", 
-            f"{total_stocks:,}",
-            delta="Live data"
-        )
+        total_analyzed = len(signals_df)
+        st.metric("Stocks Analyzed", f"{total_analyzed:,}")
     
     with col2:
-        strong_signals = len(signals_df[signals_df['signal'].isin(['STRONG_BUY', 'BUY'])])
-        st.metric(
-            "🎯 Strong Signals", 
-            strong_signals,
-            delta=f"{(strong_signals/total_stocks*100):.1f}%" if total_stocks > 0 else "0%"
-        )
+        strong_buy = len(signals_df[signals_df['signal'] == 'STRONG_BUY'])
+        st.metric("Strong Buy", strong_buy, delta="Top picks")
     
     with col3:
-        if 'ret_1d' in signals_df.columns:
-            positive = (signals_df['ret_1d'] > 0).sum()
-            breadth = (positive / len(signals_df) * 100) if len(signals_df) > 0 else 0
-            market_status = "🟢 Bullish" if breadth > 60 else "🔴 Bearish" if breadth < 40 else "🟡 Neutral"
-            st.metric("Market Breadth", f"{breadth:.0f}%", delta=market_status)
-        else:
-            st.metric("Market Breadth", "N/A")
+        # Average return
+        avg_return = signals_df['ret_30d'].mean()
+        st.metric("Avg 30D Return", f"{avg_return:.1f}%", delta_color="normal")
     
     with col4:
-        # Top performing sector
+        # Hot sector
         if 'sector_performance' in signals_df.columns:
-            top_sector_data = signals_df.groupby('sector')['sector_performance'].first().sort_values(ascending=False)
-            if not top_sector_data.empty:
-                top_sector = top_sector_data.index[0]
-                top_sector_perf = top_sector_data.iloc[0]
-                st.metric("🔥 Hot Sector", top_sector[:12], delta=f"+{top_sector_perf:.1f}%")
-            else:
-                st.metric("🔥 Hot Sector", "N/A")
-        else:
-            st.metric("🔥 Hot Sector", "N/A")
+            hot_sector = signals_df.groupby('sector')['sector_performance'].first().idxmax()
+            hot_sector_perf = signals_df.groupby('sector')['sector_performance'].first().max()
+            st.metric("Hot Sector", hot_sector[:15], delta=f"+{hot_sector_perf:.1f}%")
     
     with col5:
-        if st.session_state.last_update:
-            time_diff = (datetime.now() - st.session_state.last_update).total_seconds() / 60
-            st.metric("Last Update", f"{time_diff:.0f}m ago", delta="Auto-refresh")
-        else:
-            st.metric("Last Update", "Never")
+        # Volume surge count
+        volume_surge = len(signals_df[signals_df['rvol'] > 3])
+        st.metric("Volume Surges", volume_surge, delta="High activity")
 
-def render_smart_filters():
-    """Render smart filter buttons"""
-    st.markdown("### 🎯 Smart Filters")
-    
-    # Create columns for filter buttons
-    cols = st.columns(len(SMART_FILTERS))
-    
-    for idx, (key, filter_config) in enumerate(SMART_FILTERS.items()):
-        with cols[idx]:
-            if st.button(
-                filter_config['name'], 
-                key=f"filter_{key}",
-                use_container_width=True,
-                type="primary" if st.session_state.selected_filter == key else "secondary"
-            ):
-                st.session_state.selected_filter = key
-                st.rerun()
-    
-    # Show filter description
-    current_filter = SMART_FILTERS[st.session_state.selected_filter]
-    st.caption(f"**Active Filter:** {current_filter['description']}")
-
-def render_signal_strength_visual(stock):
-    """Render visual signal strength indicator"""
-    factors = {
-        'Momentum': stock.get('momentum_score', 0),
-        'Value': stock.get('value_score', 0),
-        'Growth': stock.get('growth_score', 0),
-        'Volume': stock.get('volume_score', 0),
-        'Technical': stock.get('technical_score', 0),
-        'Sector': stock.get('sector_score', 0)
-    }
-    
-    # Create horizontal bar chart
-    fig = go.Figure()
-    
-    colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#DDA0DD']
-    
-    for idx, (factor, score) in enumerate(factors.items()):
-        fig.add_trace(go.Bar(
-            x=[score],
-            y=[factor],
-            orientation='h',
-            name=factor,
-            marker_color=colors[idx],
-            text=f"{score:.0f}",
-            textposition='inside',
-            showlegend=False
-        ))
-    
-    fig.update_layout(
-        height=200,
-        margin=dict(l=0, r=0, t=0, b=0),
-        xaxis=dict(range=[0, 100], showgrid=False, showticklabels=False),
-        yaxis=dict(showgrid=False),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        barmode='overlay'
-    )
-    
-    return fig
-
-def render_enhanced_stock_card(stock):
-    """Render beautiful enhanced stock card"""
-    
-    # Determine card color based on signal
-    signal_colors = {
-        'STRONG_BUY': '#28a745',
-        'BUY': '#40c057',
-        'ACCUMULATE': '#74c0fc',
-        'WATCH': '#ffd43b',
-        'NEUTRAL': '#868e96'
-    }
-    
+def render_opportunity_card(stock):
+    """Render clean opportunity card"""
+    # Determine signal color
+    signal_colors = CONFIG.SIGNAL_COLORS
     signal_color = signal_colors.get(stock['signal'], '#868e96')
     
-    # Create container with colored border
+    # Create card
     with st.container():
-        # Custom styling for this card
-        st.markdown(f"""
-        <div style='border: 3px solid {signal_color}; border-radius: 15px; 
-                    padding: 20px; margin: 10px 0; background: white;
-                    box-shadow: 0 4px 15px rgba(0,0,0,0.1);'>
-        """, unsafe_allow_html=True)
-        
-        # Header row
-        col1, col2, col3 = st.columns([3, 1, 1])
+        # Card header
+        col1, col2, col3 = st.columns([3, 1.5, 1.5])
         
         with col1:
-            st.markdown(f"## {stock.get('ticker', 'N/A')}")
-            st.markdown(f"**{stock.get('company_name', 'Unknown')}**")
+            st.markdown(f"### {stock['ticker']} - {stock.get('company_name', 'N/A')[:40]}")
             st.caption(f"{stock.get('sector', 'Unknown')} | {stock.get('category', 'Unknown')}")
         
         with col2:
-            # Signal badge with custom styling
-            signal_emoji = {
-                'STRONG_BUY': '🚀',
-                'BUY': '📈',
-                'ACCUMULATE': '📊',
-                'WATCH': '👀',
-                'NEUTRAL': '➖'
-            }
+            # Signal badge
             st.markdown(f"""
-            <div style='text-align: center; background: {signal_color}; color: white; 
-                        padding: 10px; border-radius: 50px; font-weight: bold; font-size: 16px;'>
-                {signal_emoji.get(stock['signal'], '❓')} {stock['signal']}
+            <div style='text-align: center; background-color: {signal_color}20; 
+                        border: 2px solid {signal_color}; border-radius: 0.5rem; 
+                        padding: 0.5rem; margin-top: 0.5rem;'>
+                <div style='color: {signal_color}; font-weight: 700; font-size: 1rem;'>
+                    {stock['signal']}
+                </div>
+                <div style='color: {signal_color}; font-size: 0.75rem;'>
+                    {stock.get('confidence', 0):.0f}% confidence
+                </div>
             </div>
             """, unsafe_allow_html=True)
         
         with col3:
-            st.metric("💰 Price", f"₹{stock.get('price', 0):,.0f}")
-            confidence = stock.get('confidence', 0)
-            st.progress(confidence / 100)
-            st.caption(f"Confidence: {confidence:.0f}%")
-        
-        # Smart insights
-        if 'smart_explanation' in stock and stock['smart_explanation']:
-            st.info(f"💡 **Insight:** {stock['smart_explanation']}")
-        
-        # Pattern alerts
-        if 'patterns' in stock and stock['patterns']:
-            with st.expander("🎯 Detected Patterns", expanded=True):
-                for pattern in stock['patterns'][:3]:  # Top 3 patterns
-                    col1, col2 = st.columns([3, 1])
-                    with col1:
-                        st.markdown(f"**{pattern.pattern_name}**")
-                        st.caption(f"{pattern.description}")
-                    with col2:
-                        st.metric("Success Rate", pattern.success_rate)
-                        st.caption(f"Action: {pattern.action}")
-        
-        # Key metrics in a beautiful grid
-        st.markdown("---")
-        st.markdown("### 📊 Key Metrics")
-        
-        metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
-        
-        with metric_col1:
+            price = stock.get('price', 0)
             ret_1d = stock.get('ret_1d', 0)
-            st.metric("1D Return", f"{ret_1d:+.1f}%", delta_color="normal")
-            
-            ret_30d = stock.get('ret_30d', 0)
-            st.metric("30D Return", f"{ret_30d:+.1f}%", delta_color="normal")
+            st.metric("Price", f"₹{price:,.0f}", delta=f"{ret_1d:+.1f}%", delta_color="normal")
         
-        with metric_col2:
-            pe = stock.get('pe', 0)
-            st.metric("P/E Ratio", f"{pe:.1f}" if pe > 0 else "N/A")
-            
-            eps_growth = stock.get('eps_change_pct', 0)
-            if pd.notna(eps_growth):
-                st.metric("EPS Growth", f"{eps_growth:+.1f}%", delta_color="normal")
-            else:
-                st.metric("EPS Growth", "N/A")
+        # Insights section
+        if 'smart_insights' in stock and stock['smart_insights']:
+            insights = stock['smart_insights']
+            for insight_type, insight_data in insights.items():
+                if insight_data['detected']:
+                    st.info(f"{insight_data['icon']} **{insight_type}:** {insight_data['message']}")
         
-        with metric_col3:
-            rvol = stock.get('rvol', 1)
-            vol_emoji = "🔥" if rvol > 3 else "📊"
-            st.metric(f"{vol_emoji} Volume", f"{rvol:.1f}x")
-            
-            position = stock.get('position_52w', 50)
-            pos_emoji = "🎯" if position > 80 else "📍"
-            st.metric(f"{pos_emoji} 52W Pos", f"{position:.0f}%")
+        # Metrics grid
+        col1, col2, col3, col4 = st.columns(4)
         
-        with metric_col4:
+        with col1:
+            st.metric("30D Return", f"{stock.get('ret_30d', 0):+.1f}%", delta_color="normal")
+            st.metric("P/E Ratio", f"{stock.get('pe', 0):.1f}" if stock.get('pe', 0) > 0 else "N/A")
+        
+        with col2:
+            st.metric("EPS Growth", f"{stock.get('eps_change_pct', 0):+.1f}%", delta_color="normal")
+            st.metric("Volume", f"{stock.get('rvol', 1):.1f}x avg")
+        
+        with col3:
+            st.metric("52W Position", f"{stock.get('position_52w', 50):.0f}%")
+            st.metric("Momentum", f"{stock.get('momentum_score', 50):.0f}/100")
+        
+        with col4:
             # Entry zone
             if 'entry_zone' in stock:
                 zone = stock['entry_zone']
-                zone_emoji = {
-                    'GOLDEN_ENTRY': '🎯',
-                    'BREAKOUT_ZONE': '🚀',
-                    'VALUE_ZONE': '💎',
-                    'MOMENTUM_ZONE': '📈'
-                }.get(zone['zone'], '📍')
-                st.metric(f"{zone_emoji} Entry", zone['zone'].replace('_', ' '))
-                st.caption(zone['action'])
+                zone_colors = {
+                    'HOT_ZONE': '#ef4444',
+                    'ACCUMULATION_ZONE': '#10b981',
+                    'VALUE_ZONE': '#8b5cf6',
+                    'WATCH_ZONE': '#f59e0b'
+                }
+                zone_color = zone_colors.get(zone['type'], '#64748b')
+                st.markdown(f"""
+                <div style='text-align: center; margin-top: 1.5rem;'>
+                    <div style='color: {zone_color}; font-weight: 600;'>
+                        {zone['label']}
+                    </div>
+                    <div style='font-size: 0.75rem; color: #64748b;'>
+                        {zone['action']}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
         
-        # Signal strength visualization
+        # Factor analysis
+        with st.expander("📊 Factor Analysis"):
+            factors = ['momentum', 'value', 'growth', 'volume', 'technical', 'sector']
+            scores = [stock.get(f'{f}_score', 50) for f in factors]
+            
+            fig = go.Figure()
+            fig.add_trace(go.Bar(
+                x=scores,
+                y=[f.capitalize() for f in factors],
+                orientation='h',
+                marker_color=['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#06b6d4', '#ec4899'],
+                text=[f"{s:.0f}" for s in scores],
+                textposition='inside'
+            ))
+            fig.update_layout(
+                height=200,
+                margin=dict(l=0, r=0, t=0, b=0),
+                xaxis=dict(range=[0, 100], showgrid=False),
+                yaxis=dict(showgrid=False),
+                showlegend=False
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        
         st.markdown("---")
-        st.markdown("### 💪 Signal Strength Breakdown")
-        fig = render_signal_strength_visual(stock)
-        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-        
-        # Close the card div
-        st.markdown("</div>", unsafe_allow_html=True)
 
-def render_sector_intelligence(signals_df):
-    """Render sector intelligence dashboard"""
-    st.markdown("## 🏢 Sector Intelligence")
+def render_sector_analysis(signals_df):
+    """Render sector analysis"""
+    st.markdown("## 🏢 Sector Analysis")
     
-    if 'sector_performance' not in signals_df.columns:
+    if 'sector' not in signals_df.columns:
         st.warning("Sector data not available")
         return
     
-    # Get sector summary
-    sector_summary = signals_df.groupby('sector').agg({
+    # Sector performance
+    sector_stats = signals_df.groupby('sector').agg({
         'ticker': 'count',
         'ret_30d': 'mean',
-        'sector_performance': 'first',
-        'signal': lambda x: (x.isin(['STRONG_BUY', 'BUY'])).sum()
+        'signal': lambda x: (x.isin(['STRONG_BUY', 'BUY'])).sum(),
+        'confidence': 'mean'
     }).round(1)
     
-    sector_summary.columns = ['Total Stocks', 'Avg 30D Return', 'Sector Performance', 'Buy Signals']
-    sector_summary = sector_summary.sort_values('Sector Performance', ascending=False)
+    sector_stats.columns = ['Count', 'Avg Return', 'Buy Signals', 'Avg Confidence']
+    sector_stats = sector_stats.sort_values('Avg Return', ascending=False)
     
-    # Create two columns
-    col1, col2 = st.columns([2, 3])
+    # Create visualizations
+    col1, col2 = st.columns([1, 1])
     
     with col1:
-        # Sector performance heatmap
-        st.markdown("### 🔥 Sector Heatmap")
-        
-        fig = go.Figure(data=go.Bar(
-            x=sector_summary['Sector Performance'],
-            y=sector_summary.index,
+        # Sector returns heatmap
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            x=sector_stats['Avg Return'],
+            y=sector_stats.index,
             orientation='h',
             marker=dict(
-                color=sector_summary['Sector Performance'],
+                color=sector_stats['Avg Return'],
                 colorscale='RdYlGn',
+                cmin=-20,
+                cmax=20,
                 showscale=True,
-                colorbar=dict(title="Performance %")
+                colorbar=dict(title="Return %")
             ),
-            text=sector_summary['Sector Performance'].apply(lambda x: f"{x:.1f}%"),
+            text=sector_stats['Avg Return'].apply(lambda x: f"{x:.1f}%"),
             textposition='inside'
         ))
-        
         fig.update_layout(
+            title="Average 30-Day Returns by Sector",
             height=400,
-            margin=dict(l=0, r=0, t=0, b=0),
-            xaxis_title="30D Performance %",
+            xaxis_title="Return %",
             showlegend=False
         )
-        
         st.plotly_chart(fig, use_container_width=True)
     
     with col2:
-        # Top stocks in hot sectors
-        st.markdown("### 🚀 Leaders in Hot Sectors")
-        
-        # Get top 3 sectors
-        top_sectors = sector_summary.head(3).index
-        
-        for sector in top_sectors:
+        # Sector opportunities
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=sector_stats['Avg Confidence'],
+            y=sector_stats['Buy Signals'] / sector_stats['Count'] * 100,
+            mode='markers+text',
+            marker=dict(
+                size=sector_stats['Count'] * 2,
+                color=sector_stats['Avg Return'],
+                colorscale='RdYlGn',
+                showscale=False,
+                line=dict(width=1, color='white')
+            ),
+            text=sector_stats.index,
+            textposition="top center"
+        ))
+        fig.update_layout(
+            title="Sector Opportunity Map",
+            height=400,
+            xaxis_title="Average Confidence",
+            yaxis_title="% Buy Signals",
+            showlegend=False
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Top stocks by sector
+    st.markdown("### 🌟 Sector Leaders")
+    
+    top_sectors = sector_stats.head(3).index
+    cols = st.columns(3)
+    
+    for idx, sector in enumerate(top_sectors):
+        with cols[idx]:
+            st.markdown(f"**{sector}**")
             sector_stocks = signals_df[
                 (signals_df['sector'] == sector) & 
                 (signals_df['signal'].isin(['STRONG_BUY', 'BUY']))
-            ].sort_values('composite_score', ascending=False).head(3)
+            ].sort_values('confidence', ascending=False).head(3)
             
-            if not sector_stocks.empty:
-                st.markdown(f"**{sector}** ({sector_summary.loc[sector, 'Sector Performance']:.1f}% sector return)")
-                
-                for _, stock in sector_stocks.iterrows():
-                    col1, col2, col3 = st.columns([2, 1, 1])
-                    with col1:
-                        st.markdown(f"• **{stock['ticker']}** - {stock['company_name'][:30]}")
-                    with col2:
-                        st.caption(f"Return: {stock['ret_30d']:.1f}%")
-                    with col3:
-                        st.caption(f"Signal: {stock['signal']}")
-                
-                st.markdown("---")
+            for _, stock in sector_stocks.iterrows():
+                st.caption(f"• {stock['ticker']} ({stock['confidence']:.0f}%)")
 
-def render_pattern_scanner(signals_df):
-    """Render pattern detection results"""
-    st.markdown("## 🎯 Pattern Scanner")
+def render_pattern_insights(signals_df):
+    """Render pattern insights"""
+    st.markdown("## 🎯 Pattern Recognition")
     
     # Count patterns
-    pattern_counts = {}
+    pattern_summary = {}
+    stocks_with_patterns = 0
+    
     for _, stock in signals_df.iterrows():
         if 'patterns' in stock and stock['patterns']:
+            stocks_with_patterns += 1
             for pattern in stock['patterns']:
-                pattern_counts[pattern.pattern_name] = pattern_counts.get(pattern.pattern_name, 0) + 1
+                if pattern not in pattern_summary:
+                    pattern_summary[pattern] = 0
+                pattern_summary[pattern] += 1
     
-    if not pattern_counts:
-        st.info("No patterns detected in current filter")
+    if not pattern_summary:
+        st.info("No significant patterns detected in current filter")
         return
     
-    # Display pattern summary
-    cols = st.columns(len(pattern_counts))
-    for idx, (pattern_name, count) in enumerate(pattern_counts.items()):
-        with cols[idx]:
-            st.metric(pattern_name.replace('_', ' '), count)
-    
-    # Show stocks for each pattern
-    selected_pattern = st.selectbox(
-        "Select pattern to view stocks:",
-        options=list(pattern_counts.keys()),
-        format_func=lambda x: x.replace('_', ' ')
-    )
-    
-    # Get stocks with selected pattern
-    pattern_stocks = signals_df[
-        signals_df['patterns'].apply(
-            lambda p: any(pat.pattern_name == selected_pattern for pat in p) if p else False
-        )
-    ].sort_values('composite_score', ascending=False)
-    
-    if not pattern_stocks.empty:
-        st.markdown(f"### Stocks with {selected_pattern.replace('_', ' ')} Pattern")
-        
-        for _, stock in pattern_stocks.head(5).iterrows():
-            with st.expander(f"{stock['ticker']} - {stock['company_name']}", expanded=False):
-                col1, col2, col3, col4 = st.columns(4)
-                
-                with col1:
-                    st.metric("Signal", stock['signal'])
-                with col2:
-                    st.metric("30D Return", f"{stock['ret_30d']:.1f}%")
-                with col3:
-                    st.metric("Volume", f"{stock['rvol']:.1f}x")
-                with col4:
-                    st.metric("Confidence", f"{stock['confidence']:.0f}%")
-                
-                # Pattern details
-                pattern_obj = next(p for p in stock['patterns'] if p.pattern_name == selected_pattern)
-                st.info(f"**Pattern:** {pattern_obj.description}")
-                st.success(f"**Action:** {pattern_obj.action}")
-                st.caption(f"**Success Rate:** {pattern_obj.success_rate}")
-
-def load_and_analyze_data():
-    """Load data and run enhanced analysis"""
-    
-    with st.spinner("🔄 Loading market data..."):
-        success, message = st.session_state.data_loader.load_and_process(use_cache=True)
-        
-        if not success:
-            st.error(f"❌ {message}")
-            return None
-        
-        stocks_df = st.session_state.data_loader.get_stocks_data()
-        sector_df = st.session_state.data_loader.get_sector_data()
-        
-        if stocks_df.empty:
-            st.error("❌ No data loaded")
-            return None
-    
-    with st.spinner(f"🧠 Running enhanced analysis on {len(stocks_df)} stocks..."):
-        signals_df = st.session_state.signal_engine.analyze(stocks_df, sector_df)
-        st.session_state.last_update = datetime.now()
-        
-        # Show success message
-        pattern_count = sum(1 for _, s in signals_df.iterrows() if s.get('patterns'))
-        
-        st.success(f"""
-        ✅ **Enhanced Analysis Complete!**
-        - Analyzed {len(signals_df)} stocks with advanced intelligence
-        - Detected {pattern_count} stocks with high-probability patterns
-        - Found {len(signals_df[signals_df['signal'] == 'STRONG_BUY'])} STRONG_BUY signals
-        - Data quality: {st.session_state.data_loader.health['quality_analysis']['quality_score']:.0f}/100
-        """)
-        
-        return signals_df
-
-def main():
-    """Main application"""
-    
-    # Render header
-    render_header()
-    
-    # Control center
-    col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
+    # Pattern statistics
+    col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("🚀 Load Market Intelligence", type="primary", use_container_width=True):
-            signals_df = load_and_analyze_data()
-            if signals_df is not None:
-                st.session_state.signals_df = signals_df
-    
+        st.metric("Active Patterns", len(pattern_summary))
     with col2:
-        if st.button("🔄 Refresh", use_container_width=True):
-            st.session_state.data_loader.clear_cache()
-            if 'signals_df' in st.session_state:
-                signals_df = load_and_analyze_data()
-                if signals_df is not None:
-                    st.session_state.signals_df = signals_df
-    
+        st.metric("Stocks with Patterns", stocks_with_patterns)
     with col3:
-        if st.button("🗑️ Clear Cache", use_container_width=True):
-            st.session_state.data_loader.clear_cache()
-            st.success("✅ Cache cleared")
+        st.metric("Avg Patterns/Stock", f"{sum(pattern_summary.values())/stocks_with_patterns:.1f}")
     
-    with col4:
-        if st.button("ℹ️ Help", use_container_width=True):
-            with st.expander("How to use M.A.N.T.R.A. Ultimate", expanded=True):
-                st.markdown("""
-                **🚀 Quick Start:**
-                1. Click "Load Market Intelligence" to analyze stocks
-                2. Use Smart Filters to find specific opportunities
-                3. Review detailed cards for each opportunity
-                4. Check Sector Intelligence for rotation plays
-                5. Use Pattern Scanner for high-probability setups
-                
-                **🎯 Signals:**
-                - **STRONG_BUY** (92+): Ultra-high confidence, top 2-3%
-                - **BUY** (82+): High confidence, top 8-10%
-                - **ACCUMULATE** (72+): Good opportunities
-                
-                **💡 Tips:**
-                - Focus on stocks with multiple pattern detections
-                - Check volume explosions for immediate opportunities
-                - Use sector intelligence for thematic investing
-                """)
+    # Pattern distribution
+    pattern_df = pd.DataFrame(list(pattern_summary.items()), columns=['Pattern', 'Count'])
+    pattern_df = pattern_df.sort_values('Count', ascending=False)
     
-    # Check if data exists
-    if 'signals_df' not in st.session_state:
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=pattern_df['Count'],
+        y=pattern_df['Pattern'],
+        orientation='h',
+        marker_color='#3b82f6',
+        text=pattern_df['Count'],
+        textposition='inside'
+    ))
+    fig.update_layout(
+        title="Pattern Distribution",
+        height=300,
+        xaxis_title="Number of Stocks",
+        showlegend=False
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+def render_analytics_dashboard(signals_df):
+    """Render analytics dashboard"""
+    st.markdown("## 📈 Analytics")
+    
+    # Create tabs for different analytics
+    tab1, tab2, tab3 = st.tabs(["📊 Signals", "📈 Returns", "🔍 Correlations"])
+    
+    with tab1:
+        # Signal distribution
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            signal_counts = signals_df['signal'].value_counts()
+            fig = go.Figure(data=[go.Pie(
+                labels=signal_counts.index,
+                values=signal_counts.values,
+                hole=0.4,
+                marker_colors=[CONFIG.SIGNAL_COLORS.get(s, '#868e96') for s in signal_counts.index]
+            )])
+            fig.update_layout(title="Signal Distribution", height=300)
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            # Confidence distribution
+            fig = go.Figure()
+            fig.add_trace(go.Histogram(
+                x=signals_df['confidence'],
+                nbinsx=20,
+                marker_color='#3b82f6',
+                name='Confidence'
+            ))
+            fig.update_layout(
+                title="Confidence Score Distribution",
+                xaxis_title="Confidence",
+                yaxis_title="Count",
+                height=300
+            )
+            st.plotly_chart(fig, use_container_width=True)
+    
+    with tab2:
+        # Returns analysis
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Return distribution
+            returns_df = signals_df[['ret_1d', 'ret_7d', 'ret_30d']].melt()
+            fig = go.Figure()
+            for period in ['ret_1d', 'ret_7d', 'ret_30d']:
+                fig.add_trace(go.Box(
+                    y=signals_df[period],
+                    name=period.replace('ret_', '').replace('d', 'D'),
+                    boxpoints='outliers'
+                ))
+            fig.update_layout(
+                title="Return Distribution by Period",
+                yaxis_title="Return %",
+                height=350
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            # Return vs Confidence scatter
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=signals_df['confidence'],
+                y=signals_df['ret_30d'],
+                mode='markers',
+                marker=dict(
+                    color=signals_df['confidence'],
+                    colorscale='Viridis',
+                    size=5,
+                    showscale=True,
+                    colorbar=dict(title="Confidence")
+                ),
+                text=signals_df['ticker'],
+                hovertemplate='%{text}<br>Confidence: %{x}<br>30D Return: %{y}%'
+            ))
+            fig.update_layout(
+                title="30D Return vs Confidence",
+                xaxis_title="Confidence Score",
+                yaxis_title="30D Return %",
+                height=350
+            )
+            st.plotly_chart(fig, use_container_width=True)
+    
+    with tab3:
+        # Correlation matrix
+        numeric_cols = ['momentum_score', 'value_score', 'growth_score', 'volume_score', 
+                       'technical_score', 'ret_30d', 'pe', 'eps_change_pct']
+        
+        available_cols = [col for col in numeric_cols if col in signals_df.columns]
+        if len(available_cols) > 2:
+            corr_matrix = signals_df[available_cols].corr()
+            
+            fig = go.Figure(data=go.Heatmap(
+                z=corr_matrix.values,
+                x=corr_matrix.columns,
+                y=corr_matrix.columns,
+                colorscale='RdBu',
+                zmid=0,
+                text=corr_matrix.values.round(2),
+                texttemplate='%{text}',
+                textfont={"size": 10}
+            ))
+            fig.update_layout(
+                title="Factor Correlation Matrix",
+                height=400
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+def apply_filters(df, sector, signal, confidence, pe_range, market_cap):
+    """Apply advanced filters to dataframe"""
+    filtered = df.copy()
+    
+    # Sector filter
+    if sector != 'All':
+        filtered = filtered[filtered['sector'] == sector]
+    
+    # Signal filter
+    if signal != 'All':
+        filtered = filtered[filtered['signal'] == signal]
+    
+    # Confidence filter
+    filtered = filtered[filtered['confidence'] >= confidence]
+    
+    # PE filter
+    if 'pe' in filtered.columns:
+        filtered = filtered[(filtered['pe'] >= pe_range[0]) & (filtered['pe'] <= pe_range[1])]
+    
+    # Market cap filter
+    if market_cap != 'All' and 'market_cap' in filtered.columns:
+        if market_cap == 'Large Cap':
+            filtered = filtered[filtered['market_cap'] > 20000]
+        elif market_cap == 'Mid Cap':
+            filtered = filtered[(filtered['market_cap'] >= 5000) & (filtered['market_cap'] <= 20000)]
+        elif market_cap == 'Small Cap':
+            filtered = filtered[filtered['market_cap'] < 5000]
+    
+    return filtered
+
+# ============================================================================
+# MAIN APPLICATION
+# ============================================================================
+def main():
+    """Main application logic"""
+    
+    # Render sidebar
+    render_sidebar()
+    
+    # Main content area
+    if not st.session_state.data_loaded:
         # Welcome screen
         st.markdown("""
-        <div style='text-align: center; padding: 50px; background: #f8f9fa; 
-                    border-radius: 15px; margin: 20px 0;'>
-            <h2>👋 Welcome to M.A.N.T.R.A. Ultimate</h2>
-            <p style='font-size: 18px; margin: 20px 0;'>
-                The most advanced stock analysis system with:
+        <div style='text-align: center; padding: 5rem 2rem;'>
+            <h1 style='font-size: 3rem; margin-bottom: 1rem;'>🔱 Welcome to M.A.N.T.R.A.</h1>
+            <p style='font-size: 1.25rem; color: #64748b; margin-bottom: 2rem;'>
+                Your intelligent companion for market analysis and trading decisions
             </p>
-            <div style='display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;'>
+            <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+                        gap: 2rem; max-width: 800px; margin: 0 auto;'>
                 <div style='text-align: center;'>
-                    <h3>🧠</h3>
-                    <p>Enhanced AI</p>
+                    <div style='font-size: 3rem;'>🧠</div>
+                    <h3>8-Factor Analysis</h3>
+                    <p style='color: #64748b;'>Advanced multi-factor scoring system</p>
                 </div>
                 <div style='text-align: center;'>
-                    <h3>🎯</h3>
-                    <p>Pattern Detection</p>
+                    <div style='font-size: 3rem;'>🎯</div>
+                    <h3>Smart Filters</h3>
+                    <p style='color: #64748b;'>Pre-configured opportunity scanners</p>
                 </div>
                 <div style='text-align: center;'>
-                    <h3>📊</h3>
-                    <p>Smart Filters</p>
+                    <div style='font-size: 3rem;'>📊</div>
+                    <h3>Pattern Detection</h3>
+                    <p style='color: #64748b;'>Identify high-probability setups</p>
                 </div>
                 <div style='text-align: center;'>
-                    <h3>🚀</h3>
-                    <p>Volume Intelligence</p>
+                    <div style='font-size: 3rem;'>🚀</div>
+                    <h3>Real-time Analysis</h3>
+                    <p style='color: #64748b;'>Live data from Google Sheets</p>
                 </div>
             </div>
-            <p style='margin-top: 30px;'>
-                <strong>Click "Load Market Intelligence" to begin!</strong>
+            <p style='margin-top: 3rem; font-size: 1.125rem;'>
+                👈 Click <strong>"Load Data"</strong> in the sidebar to begin
             </p>
         </div>
         """, unsafe_allow_html=True)
         return
     
+    # Get data
     signals_df = st.session_state.signals_df
     
-    # Market Pulse
-    st.markdown("---")
-    render_market_pulse(signals_df)
-    
-    # Smart Filters
-    st.markdown("---")
-    render_smart_filters()
-    
-    # Apply selected filter
+    # Apply smart filter
     current_filter = SMART_FILTERS[st.session_state.selected_filter]
     filtered_df = current_filter['filter'](signals_df)
     
-    # Main content tabs
+    # Apply advanced filters
+    filtered_df = apply_filters(
+        filtered_df,
+        st.session_state.get('sector_filter', 'All'),
+        st.session_state.get('signal_filter', 'All'),
+        st.session_state.get('confidence_filter', 60),
+        st.session_state.get('pe_filter', (0, 50)),
+        st.session_state.get('mcap_filter', 'All')
+    )
+    
+    # Render header
+    render_header()
+    
+    # Render content based on tabs
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "🎯 Top Opportunities",
-        "🏢 Sector Intelligence", 
-        "🔍 Pattern Scanner",
+        "🎯 Opportunities",
+        "🏢 Sectors",
+        "🔍 Patterns",
         "📊 All Stocks",
         "📈 Analytics"
     ])
     
     with tab1:
-        st.markdown("## 🚀 Top Opportunities")
+        render_market_overview(signals_df)
+        
+        st.markdown("---")
+        st.markdown(f"## {current_filter['icon']} {current_filter['name']}")
+        st.caption(f"Showing {len(filtered_df)} opportunities")
         
         if filtered_df.empty:
-            st.warning(f"No stocks match the filter: {current_filter['name']}")
+            st.warning("No stocks match the current filters. Try adjusting your criteria.")
         else:
-            # Summary metrics
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Filtered Stocks", len(filtered_df))
-            with col2:
-                strong_buy = len(filtered_df[filtered_df['signal'] == 'STRONG_BUY'])
-                st.metric("STRONG_BUY Signals", strong_buy)
-            with col3:
-                avg_confidence = filtered_df['confidence'].mean()
-                st.metric("Avg Confidence", f"{avg_confidence:.0f}%")
-            
-            st.markdown("---")
-            
             # Display top opportunities
-            top_stocks = filtered_df.head(10)
-            for _, stock in top_stocks.iterrows():
-                render_enhanced_stock_card(stock)
+            for _, stock in filtered_df.head(10).iterrows():
+                render_opportunity_card(stock)
     
     with tab2:
-        render_sector_intelligence(signals_df)
+        render_sector_analysis(signals_df)
     
     with tab3:
-        render_pattern_scanner(filtered_df)
+        render_pattern_insights(filtered_df)
     
     with tab4:
-        st.markdown("## 📊 All Stocks Analysis")
+        st.markdown("## 📊 All Stocks")
         
-        # Additional filters
-        col1, col2, col3, col4 = st.columns(4)
-        
+        # Additional table filters
+        col1, col2, col3 = st.columns(3)
         with col1:
-            sectors = ['All'] + sorted(signals_df['sector'].dropna().unique().tolist())
-            selected_sector = st.selectbox("Sector", sectors)
-        
+            sort_by = st.selectbox("Sort by", ['Confidence', '30D Return', 'Volume', 'P/E'])
         with col2:
-            signals = ['All'] + sorted(signals_df['signal'].unique().tolist())
-            selected_signal = st.selectbox("Signal", signals)
-        
+            show_only = st.multiselect("Show only", ['STRONG_BUY', 'BUY', 'ACCUMULATE'])
         with col3:
-            min_confidence = st.slider("Min Confidence", 0, 100, 60)
+            search = st.text_input("Search ticker/company", "")
         
-        with col4:
-            sort_by = st.selectbox("Sort By", ['Confidence', '30D Return', 'Volume', 'PE'])
-            sort_column = {
-                'Confidence': 'confidence',
-                '30D Return': 'ret_30d',
-                'Volume': 'rvol',
-                'PE': 'pe'
-            }[sort_by]
-        
-        # Apply filters
+        # Apply table filters
         display_df = filtered_df.copy()
-        
-        if selected_sector != 'All':
-            display_df = display_df[display_df['sector'] == selected_sector]
-        
-        if selected_signal != 'All':
-            display_df = display_df[display_df['signal'] == selected_signal]
-        
-        display_df = display_df[display_df['confidence'] >= min_confidence]
+        if show_only:
+            display_df = display_df[display_df['signal'].isin(show_only)]
+        if search:
+            mask = (display_df['ticker'].str.contains(search.upper(), na=False) | 
+                   display_df['company_name'].str.contains(search, case=False, na=False))
+            display_df = display_df[mask]
         
         # Sort
-        display_df = display_df.sort_values(sort_column, ascending=(sort_by == 'PE'))
+        sort_map = {
+            'Confidence': 'confidence',
+            '30D Return': 'ret_30d',
+            'Volume': 'rvol',
+            'P/E': 'pe'
+        }
+        display_df = display_df.sort_values(
+            sort_map[sort_by], 
+            ascending=(sort_by == 'P/E')
+        )
         
-        # Display
-        st.info(f"Showing {len(display_df)} stocks")
+        # Display count
+        st.info(f"Displaying {len(display_df)} stocks")
         
+        # Show dataframe
         if not display_df.empty:
-            # Select columns
+            # Select display columns
             display_cols = [
-                'ticker', 'company_name', 'signal', 'confidence', 
-                'smart_explanation', 'price', 'ret_1d', 'ret_30d', 
-                'pe', 'eps_change_pct', 'rvol', 'sector'
+                'ticker', 'company_name', 'signal', 'confidence',
+                'price', 'ret_1d', 'ret_30d', 'pe', 'eps_change_pct',
+                'rvol', 'sector', 'momentum_score', 'value_score'
             ]
-            
-            # Keep available columns
             display_cols = [col for col in display_cols if col in display_df.columns]
             
-            # Show dataframe with custom formatting
+            # Configure column display
+            column_config = {
+                "ticker": st.column_config.TextColumn("Ticker", width="small"),
+                "company_name": st.column_config.TextColumn("Company", width="medium"),
+                "signal": st.column_config.TextColumn("Signal", width="small"),
+                "confidence": st.column_config.ProgressColumn("Confidence", min_value=0, max_value=100, format="%d"),
+                "price": st.column_config.NumberColumn("Price", format="₹%.0f"),
+                "ret_1d": st.column_config.NumberColumn("1D%", format="%.1f%%"),
+                "ret_30d": st.column_config.NumberColumn("30D%", format="%.1f%%"),
+                "pe": st.column_config.NumberColumn("P/E", format="%.1f"),
+                "eps_change_pct": st.column_config.NumberColumn("EPS Δ%", format="%.1f%%"),
+                "rvol": st.column_config.NumberColumn("RVol", format="%.1fx"),
+                "sector": st.column_config.TextColumn("Sector", width="small"),
+                "momentum_score": st.column_config.NumberColumn("Mom", format="%.0f"),
+                "value_score": st.column_config.NumberColumn("Val", format="%.0f")
+            }
+            
             st.dataframe(
                 display_df[display_cols].head(100),
+                column_config=column_config,
                 use_container_width=True,
                 height=600,
-                column_config={
-                    "ticker": st.column_config.TextColumn("Ticker", width="small"),
-                    "company_name": st.column_config.TextColumn("Company"),
-                    "signal": st.column_config.TextColumn("Signal", width="small"),
-                    "confidence": st.column_config.ProgressColumn("Confidence", min_value=0, max_value=100),
-                    "smart_explanation": st.column_config.TextColumn("Intelligence", width="large"),
-                    "price": st.column_config.NumberColumn("Price", format="₹%.0f"),
-                    "ret_1d": st.column_config.NumberColumn("1D%", format="%.1f%%"),
-                    "ret_30d": st.column_config.NumberColumn("30D%", format="%.1f%%"),
-                    "pe": st.column_config.NumberColumn("P/E", format="%.1f"),
-                    "eps_change_pct": st.column_config.NumberColumn("EPS Δ%", format="%.1f%%"),
-                    "rvol": st.column_config.NumberColumn("Vol", format="%.1fx"),
-                }
+                hide_index=True
             )
     
     with tab5:
-        st.markdown("## 📈 Market Analytics")
-        
-        # Signal distribution pie chart
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("### Signal Distribution")
-            signal_counts = signals_df['signal'].value_counts()
-            
-            fig = go.Figure(data=[go.Pie(
-                labels=signal_counts.index,
-                values=signal_counts.values,
-                hole=0.4,
-                marker_colors=[signal_colors.get(s, '#868e96') for s in signal_counts.index]
-            )])
-            
-            fig.update_layout(
-                height=300,
-                margin=dict(l=0, r=0, t=0, b=0),
-                showlegend=True
-            )
-            
-            st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            st.markdown("### Top Patterns Detected")
-            pattern_summary = {}
-            for _, stock in signals_df.iterrows():
-                if 'patterns' in stock and stock['patterns']:
-                    for pattern in stock['patterns']:
-                        pattern_summary[pattern.pattern_name] = pattern_summary.get(pattern.pattern_name, 0) + 1
-            
-            if pattern_summary:
-                pattern_df = pd.DataFrame(
-                    list(pattern_summary.items()), 
-                    columns=['Pattern', 'Count']
-                ).sort_values('Count', ascending=True)
-                
-                fig = go.Figure(data=[go.Bar(
-                    x=pattern_df['Count'],
-                    y=pattern_df['Pattern'],
-                    orientation='h',
-                    marker_color='#667eea'
-                )])
-                
-                fig.update_layout(
-                    height=300,
-                    margin=dict(l=0, r=0, t=0, b=0),
-                    xaxis_title="Number of Stocks"
-                )
-                
-                st.plotly_chart(fig, use_container_width=True)
-        
-        # Market breadth over time
-        st.markdown("### Market Momentum Distribution")
-        
-        momentum_ranges = pd.cut(
-            signals_df['ret_30d'], 
-            bins=[-100, -20, -10, 0, 10, 20, 50, 100],
-            labels=['< -20%', '-20 to -10%', '-10 to 0%', '0 to 10%', '10 to 20%', '20 to 50%', '> 50%']
-        )
-        
-        momentum_dist = momentum_ranges.value_counts().sort_index()
-        
-        fig = go.Figure(data=[go.Bar(
-            x=momentum_dist.index,
-            y=momentum_dist.values,
-            marker_color=['#e74c3c' if '0%' in str(x) and '-' in str(x) else '#2ecc71' for x in momentum_dist.index]
-        )])
-        
-        fig.update_layout(
-            height=300,
-            margin=dict(l=0, r=0, t=20, b=0),
-            xaxis_title="30-Day Return Range",
-            yaxis_title="Number of Stocks"
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-    
-    # Export section
-    st.markdown("---")
-    with st.expander("📥 Export Data"):
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            csv = filtered_df.to_csv(index=False)
-            st.download_button(
-                "📊 Download Filtered Data",
-                csv,
-                f"mantra_filtered_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                "text/csv",
-                use_container_width=True
-            )
-        
-        with col2:
-            top_50 = signals_df.head(50).to_csv(index=False)
-            st.download_button(
-                "🎯 Download Top 50",
-                top_50,
-                f"mantra_top50_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                "text/csv",
-                use_container_width=True
-            )
-        
-        with col3:
-            # Pattern stocks
-            pattern_stocks = signals_df[
-                signals_df['patterns'].apply(lambda p: len(p) > 0 if p else False)
-            ]
-            if not pattern_stocks.empty:
-                pattern_csv = pattern_stocks.to_csv(index=False)
-                st.download_button(
-                    "🎯 Download Pattern Stocks",
-                    pattern_csv,
-                    f"mantra_patterns_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                    "text/csv",
-                    use_container_width=True
-                )
+        render_analytics_dashboard(signals_df)
 
 if __name__ == "__main__":
     main()
