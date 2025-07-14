@@ -209,13 +209,27 @@ class UltimatePrecisionEngine:
         
         logger.info(f"Cleaning watchlist data: {len(df)} initial rows")
         
-        # 1. Rename columns to standard mapping
+        # 1. Rename columns to standard mapping with error handling
         original_columns = df.columns.tolist()
-        df = df.rename(columns={k: v for k, v in WATCHLIST_COLUMNS.items() if k in df.columns})
         
-        # 2. Keep only available essential columns
-        available_cols = [col for col in WATCHLIST_COLUMNS.values() if col in df.columns]
-        df = df[available_cols]
+        # Only rename columns that actually exist in the dataframe
+        valid_mappings = {k: v for k, v in WATCHLIST_COLUMNS.items() if k in df.columns}
+        if valid_mappings:
+            df = df.rename(columns=valid_mappings)
+            logger.info(f"Renamed {len(valid_mappings)} columns using column mapping")
+        else:
+            logger.warning("No column mappings applied - using original column names")
+        
+        # 2. Keep only available essential columns (more flexible)
+        essential_cols = ['ticker', 'price', 'sector']  # Minimum required
+        available_essential = [col for col in essential_cols if col in df.columns]
+        
+        if not available_essential:
+            logger.error("❌ No essential columns found! Cannot proceed with data cleaning.")
+            return pd.DataFrame()  # Return empty dataframe
+        
+        # Keep all available columns, don't be too restrictive
+        logger.info(f"Working with {len(df.columns)} available columns")
         
         # 3. Validate and clean ticker symbols (critical for everything)
         if 'ticker' in df.columns:
@@ -257,12 +271,16 @@ class UltimatePrecisionEngine:
                     df.loc[df[col] < VALIDATION_RULES['min_return'], col] = np.nan
                     df.loc[df[col] > VALIDATION_RULES['max_return'], col] = np.nan
         
-        # 5. Filter out invalid stocks
+        # 5. Filter out invalid stocks (more lenient)
         if 'price' in df.columns:
-            valid_price_mask = (df['price'] >= VALIDATION_RULES['min_price']) & (df['price'].notna())
+            # Only filter out clearly invalid prices (0 or negative), be more lenient
+            valid_price_mask = (df['price'] > 0) & (df['price'].notna())
+            initial_count = len(df)
             df = df[valid_price_mask]
+            filtered_count = len(df)
+            logger.info(f"Price filtering: {initial_count} → {filtered_count} rows (removed {initial_count - filtered_count} invalid prices)")
         
-        # 6. Smart defaults for missing critical data
+        # 6. Smart defaults for missing critical data (be more lenient)
         critical_defaults = {
             'price': 0, 'pe': 0, 'eps_current': 0, 'eps_change_pct': 0,
             'vol_1d': 0, 'rvol': 1.0, 'from_low_pct': 50, 'from_high_pct': -50,
@@ -271,7 +289,10 @@ class UltimatePrecisionEngine:
         
         for col, default_val in critical_defaults.items():
             if col in df.columns:
+                before_fill = df[col].isna().sum()
                 df[col] = df[col].fillna(default_val)
+                if before_fill > 0:
+                    logger.info(f"Filled {before_fill} missing values in {col} with {default_val}")
         
         # 7. Clean text columns
         text_columns = ['name', 'sector', 'category', 'eps_tier', 'price_tier']
@@ -279,6 +300,18 @@ class UltimatePrecisionEngine:
             if col in df.columns:
                 df[col] = df[col].astype(str).str.strip()
                 df.loc[df[col].isin(['nan', 'NaN', '', 'None']), col] = 'Unknown'
+        
+        # Final check - ensure we don't lose all data
+        if len(df) == 0:
+            logger.error("❌ All data was filtered out during cleaning! Restoring original data with minimal cleaning...")
+            # Restore original data with just basic ticker cleaning
+            df = self.watchlist_df.copy()
+            if 'ticker' in df.columns:
+                df['ticker'] = df['ticker'].astype(str).str.upper().str.strip()
+                df = df[~df['ticker'].isin(['NAN', 'NONE', '', 'NULL', 'NA'])]
+                df = df.dropna(subset=['ticker'])
+                df = df[df['ticker'].str.len() > 0]
+                df = df.drop_duplicates(subset=['ticker'], keep='first')
         
         logger.info(f"✅ Watchlist cleaned: {len(df)} final rows")
         return df.reset_index(drop=True)
@@ -652,9 +685,24 @@ class UltimatePrecisionEngine:
                 if col in sector_data.columns:
                     master[f'stock_{col}'] = master['sector'].map(sector_data[col]).fillna(0)
         
-        # Final data validation
-        master = master.dropna(subset=['ticker'])
-        master = master[master['price'] > 0] if 'price' in master.columns else master
+        # Final data validation - be more lenient
+        if 'ticker' in master.columns:
+            master = master.dropna(subset=['ticker'])
+            
+        # Only filter on price if we have meaningful price data
+        if 'price' in master.columns:
+            # Allow prices above 0, don't enforce minimum thresholds that might be too strict
+            price_mask = (master['price'] > 0) | (master['price'].isna())
+            master = master[price_mask]
+            logger.info(f"After price validation: {len(master)} stocks remaining")
+        
+        # Ensure we have some data to work with
+        if len(master) == 0:
+            logger.warning("⚠️ No stocks passed validation. Using original data with basic cleaning only.")
+            master = self.watchlist_df.copy()
+            if 'ticker' in master.columns:
+                master = master.dropna(subset=['ticker'])
+                master = master[master['ticker'] != '']
         
         self.master_df = master.reset_index(drop=True)
         logger.info(f"✅ Master dataset created: {len(self.master_df)} stocks with comprehensive data")
@@ -670,15 +718,22 @@ class UltimatePrecisionEngine:
         
         df = self.master_df
         
-        # Calculate all 8 factor scores
-        df['momentum_score'] = self._calculate_momentum_factor(df)
-        df['value_score'] = self._calculate_value_factor(df)
-        df['growth_score'] = self._calculate_growth_factor(df)
-        df['volume_score'] = self._calculate_volume_factor(df)
-        df['technical_score'] = self._calculate_technical_factor(df)
-        df['sector_score'] = self._calculate_sector_factor(df)
-        df['risk_score'] = self._calculate_risk_factor(df)
-        df['quality_score'] = self._calculate_quality_factor(df)
+        # Calculate all 8 factor scores with error handling
+        try:
+            df['momentum_score'] = self._calculate_momentum_factor(df)
+            df['value_score'] = self._calculate_value_factor(df)
+            df['growth_score'] = self._calculate_growth_factor(df)
+            df['volume_score'] = self._calculate_volume_factor(df)
+            df['technical_score'] = self._calculate_technical_factor(df)
+            df['sector_score'] = self._calculate_sector_factor(df)
+            df['risk_score'] = self._calculate_risk_factor(df)
+            df['quality_score'] = self._calculate_quality_factor(df)
+        except Exception as e:
+            logger.error(f"Error calculating factor scores: {e}")
+            # Set default scores if calculation fails
+            for factor in ['momentum', 'value', 'growth', 'volume', 'technical', 'sector', 'risk', 'quality']:
+                if f'{factor}_score' not in df.columns:
+                    df[f'{factor}_score'] = 50.0
         
         # Apply market condition adjustments
         if self.market_conditions.get('condition') == 'bull_market':
@@ -1187,6 +1242,10 @@ class UltimatePrecisionEngine:
     def _validate_and_rank_signals(self):
         """Final validation and ranking of signals"""
         
+        if self.master_df.empty:
+            logger.warning("Cannot validate and rank signals: master dataset is empty")
+            return
+        
         # Apply final quality filters
         if 'data_completeness_score' in self.master_df.columns:
             # Downgrade signals with poor data quality
@@ -1200,14 +1259,18 @@ class UltimatePrecisionEngine:
                 if strong_signal_poor_data.any():
                     self.master_df.loc[strong_signal_poor_data, 'signal'] = 'WATCH'
         
-        # Final ranking by composite score and confidence
-        self.master_df['final_rank'] = (
-            self.master_df['composite_score'] * 0.7 + 
-            self.master_df['confidence'] * 0.3
-        ).round(1)
-        
-        # Sort by final rank
-        self.master_df = self.master_df.sort_values('final_rank', ascending=False).reset_index(drop=True)
+        # Only proceed with ranking if we have the required columns
+        if 'composite_score' in self.master_df.columns and 'confidence' in self.master_df.columns:
+            # Final ranking by composite score and confidence
+            self.master_df['final_rank'] = (
+                self.master_df['composite_score'] * 0.7 + 
+                self.master_df['confidence'] * 0.3
+            ).round(1)
+            
+            # Sort by final rank
+            self.master_df = self.master_df.sort_values('final_rank', ascending=False).reset_index(drop=True)
+        else:
+            logger.warning("Cannot create final ranking: missing composite_score or confidence columns")
         
         logger.info("✅ Signal validation and ranking completed")
     
