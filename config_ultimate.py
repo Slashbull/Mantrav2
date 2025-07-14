@@ -33,7 +33,7 @@ class DataSourceConfig:
     
     # Sheet GIDs for each tab
     SHEET_GIDS: Dict[str, str] = field(default_factory=lambda: {
-        "watchlist": "0",          # Main watchlist sheet
+        "watchlist": "2026492216",          # Main watchlist sheet
         "returns": "100734077",    # Stock Return Analysis sheet  
         "sectors": "140104095"     # Sector Analysis sheet
     })
