@@ -1,8 +1,8 @@
 """
-app.py - M.A.N.T.R.A. Version 3 FINAL
-=====================================
-Ultimate simple UI with best UX
-No bugs, ultra-reliable, locked forever
+app.py - M.A.N.T.R.A. Version 3 FINAL (Simplified)
+==================================================
+Ultimate simple UI with native Streamlit components
+No complex HTML, just pure functionality
 """
 
 import streamlit as st
@@ -23,101 +23,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for beautiful UI
-st.markdown("""
-<style>
-    /* Main container */
-    .main {
-        padding: 0rem 1rem;
-    }
-    
-    /* Header styling */
-    .app-header {
-        text-align: center;
-        padding: 2rem 0;
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-        color: white;
-        border-radius: 10px;
-        margin-bottom: 2rem;
-    }
-    
-    .app-header h1 {
-        font-size: 2.5rem;
-        margin: 0;
-        font-weight: 700;
-    }
-    
-    .app-header p {
-        font-size: 1.2rem;
-        margin: 0.5rem 0 0 0;
-        opacity: 0.9;
-    }
-    
-    /* Stock card styling */
-    .stock-card {
-        border-radius: 10px;
-        padding: 1.5rem;
-        margin: 1rem 0;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
-    }
-    
-    .stock-card:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        transform: translateY(-2px);
-    }
-    
-    /* Signal badge */
-    .signal-badge {
-        display: inline-block;
-        padding: 0.3rem 1rem;
-        border-radius: 20px;
-        font-weight: bold;
-        font-size: 0.9rem;
-    }
-    
-    /* Metric styling */
-    .metric-container {
-        text-align: center;
-        padding: 0.5rem;
-    }
-    
-    .metric-label {
-        font-size: 0.8rem;
-        color: #666;
-        margin: 0;
-    }
-    
-    .metric-value {
-        font-size: 1.2rem;
-        font-weight: bold;
-        margin: 0;
-    }
-    
-    /* Success message */
-    .stSuccess {
-        background-color: #d4edda;
-        border-color: #c3e6cb;
-        color: #155724;
-    }
-    
-    /* Button styling */
-    .stButton > button {
-        width: 100%;
-        font-size: 1.2rem;
-        font-weight: bold;
-        padding: 0.8rem;
-        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-        border: none;
-        color: white;
-    }
-    
-    .stButton > button:hover {
-        background: linear-gradient(135deg, #20c997 0%, #28a745 100%);
-    }
-</style>
-""", unsafe_allow_html=True)
-
 # Initialize session state
 if 'data_loader' not in st.session_state:
     st.session_state.data_loader = DataLoader()
@@ -128,117 +33,127 @@ if 'last_update' not in st.session_state:
 
 def render_header():
     """Render application header"""
-    st.markdown(f"""
-    <div class="app-header">
-        <h1>{CONFIG.APP_ICON} {CONFIG.APP_NAME} {CONFIG.APP_VERSION}</h1>
-        <p>{CONFIG.APP_SUBTITLE}</p>
-        <p style="font-size: 1rem; margin-top: 1rem;">Ultra-high confidence signals with crystal-clear reasoning</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-def format_number(value, decimals=0, prefix="", suffix=""):
-    """Format number for display"""
-    if pd.isna(value):
-        return "N/A"
-    if decimals == 0:
-        return f"{prefix}{value:,.0f}{suffix}"
-    else:
-        return f"{prefix}{value:,.{decimals}f}{suffix}"
-
-def format_change(value):
-    """Format percentage change with color"""
-    if pd.isna(value):
-        return "N/A"
-    color = "green" if value > 0 else "red" if value < 0 else "gray"
-    return f'<span style="color: {color}; font-weight: bold;">{value:+.1f}%</span>'
+    col1, col2, col3 = st.columns([1, 3, 1])
+    
+    with col2:
+        st.markdown(f"# {CONFIG.APP_ICON} {CONFIG.APP_NAME} {CONFIG.APP_VERSION}")
+        st.markdown(f"**{CONFIG.APP_SUBTITLE}**")
+        st.caption("Ultra-high confidence signals with crystal-clear reasoning")
+    
+    st.markdown("---")
 
 def render_stock_card(stock):
-    """Render a single stock opportunity card"""
+    """Render a single stock opportunity card using native Streamlit components"""
     
     # Get signal color
     signal_color = CONFIG.SIGNAL_COLORS.get(stock['signal'], '#868e96')
     
-    # Create card HTML
-    card_html = f"""
-    <div class="stock-card" style="border: 2px solid {signal_color};">
-        <div style="display: flex; justify-content: space-between; align-items: start;">
-            <div>
-                <h3 style="margin: 0; color: #333;">{stock.get('ticker', 'N/A')}</h3>
-                <p style="margin: 0.3rem 0; color: #666; font-size: 0.9rem;">
-                    {stock.get('company_name', 'Unknown Company')}
-                </p>
-                <p style="margin: 0.3rem 0; color: #888; font-size: 0.8rem;">
-                    {stock.get('sector', 'Unknown Sector')} | {stock.get('category', 'Unknown Category')}
-                </p>
-            </div>
-            <div style="text-align: right;">
-                <div class="signal-badge" style="background: {signal_color}; color: white;">
-                    {stock['signal']}
-                </div>
-                <p style="margin: 0.5rem 0 0 0; font-size: 1.8rem; font-weight: bold;">
-                    ₹{format_number(stock.get('price', 0))}
-                </p>
-                <p style="margin: 0; font-size: 0.9rem; color: #666;">
-                    Confidence: {stock.get('confidence', 0):.0f}%
-                </p>
-            </div>
-        </div>
+    # Create an expander for each stock
+    with st.expander(f"**{stock.get('ticker', 'N/A')} - {stock.get('company_name', 'Unknown')}**", expanded=True):
         
-        <hr style="margin: 1rem 0; opacity: 0.3;">
+        # Header information
+        col1, col2, col3 = st.columns([2, 1, 1])
         
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
-            <div class="metric-container">
-                <p class="metric-label">1D Return</p>
-                <p class="metric-value">{format_change(stock.get('ret_1d', 0))}</p>
-            </div>
-            <div class="metric-container">
-                <p class="metric-label">30D Return</p>
-                <p class="metric-value">{format_change(stock.get('ret_30d', 0))}</p>
-            </div>
-            <div class="metric-container">
-                <p class="metric-label">P/E Ratio</p>
-                <p class="metric-value">{format_number(stock.get('pe', 0), 1)}</p>
-            </div>
-            <div class="metric-container">
-                <p class="metric-label">Volume</p>
-                <p class="metric-value">{format_number(stock.get('rvol', 1), 1)}x</p>
-            </div>
-        </div>
+        with col1:
+            st.markdown(f"**Sector:** {stock.get('sector', 'Unknown')}")
+            st.markdown(f"**Category:** {stock.get('category', 'Unknown')}")
         
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 1rem;">
-            <div class="metric-container">
-                <p class="metric-label">EPS Growth</p>
-                <p class="metric-value">{format_change(stock.get('eps_change_pct', 0))}</p>
-            </div>
-            <div class="metric-container">
-                <p class="metric-label">52W Position</p>
-                <p class="metric-value">{format_number(stock.get('position_52w', 50), 0)}%</p>
-            </div>
-            <div class="metric-container">
-                <p class="metric-label">Momentum</p>
-                <p class="metric-value">{format_number(stock.get('momentum_score', 0), 0)}/100</p>
-            </div>
-            <div class="metric-container">
-                <p class="metric-label">Value</p>
-                <p class="metric-value">{format_number(stock.get('value_score', 0), 0)}/100</p>
-            </div>
-        </div>
+        with col2:
+            # Signal badge
+            if stock['signal'] == 'STRONG_BUY':
+                st.success(f"🚀 {stock['signal']}")
+            elif stock['signal'] == 'BUY':
+                st.success(f"📈 {stock['signal']}")
+            elif stock['signal'] == 'ACCUMULATE':
+                st.info(f"📊 {stock['signal']}")
+            else:
+                st.warning(f"👀 {stock['signal']}")
         
-        <hr style="margin: 1rem 0; opacity: 0.3;">
+        with col3:
+            st.metric("Price", f"₹{stock.get('price', 0):,.0f}")
+            st.caption(f"Confidence: {stock.get('confidence', 0):.0f}%")
         
-        <div style="background: #f8f9fa; padding: 1rem; border-radius: 5px; margin-top: 1rem;">
-            <p style="margin: 0; font-weight: bold; color: #333;">📊 Signal Analysis</p>
-            <p style="margin: 0.5rem 0 0 0; color: #666; font-size: 0.9rem;">
-                {stock.get('explanation', 'Analysis based on 8-factor scoring system')}
-            </p>
-            <p style="margin: 0.5rem 0 0 0; color: #888; font-size: 0.8rem;">
-                Composite Score: {stock.get('composite_score', 0):.1f}/100
-            </p>
-        </div>
-    </div>
-    """
-    
-    st.markdown(card_html, unsafe_allow_html=True)
+        # Key metrics
+        st.markdown("### 📊 Key Metrics")
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            ret_1d = stock.get('ret_1d', 0)
+            st.metric(
+                "1D Return", 
+                f"{ret_1d:+.1f}%",
+                delta=f"{ret_1d:+.1f}%",
+                delta_color="normal"
+            )
+        
+        with col2:
+            ret_30d = stock.get('ret_30d', 0)
+            st.metric(
+                "30D Return", 
+                f"{ret_30d:+.1f}%",
+                delta=f"{ret_30d:+.1f}%",
+                delta_color="normal"
+            )
+        
+        with col3:
+            pe = stock.get('pe', 0)
+            st.metric("P/E Ratio", f"{pe:.1f}" if pe > 0 else "N/A")
+        
+        with col4:
+            rvol = stock.get('rvol', 1)
+            st.metric("Volume", f"{rvol:.1f}x")
+        
+        # Additional metrics
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            eps_growth = stock.get('eps_change_pct', 0)
+            if pd.notna(eps_growth):
+                st.metric(
+                    "EPS Growth",
+                    f"{eps_growth:+.1f}%",
+                    delta=f"{eps_growth:+.1f}%",
+                    delta_color="normal"
+                )
+            else:
+                st.metric("EPS Growth", "N/A")
+        
+        with col2:
+            position = stock.get('position_52w', 50)
+            st.metric("52W Position", f"{position:.0f}%")
+        
+        with col3:
+            momentum = stock.get('momentum_score', 0)
+            st.metric("Momentum", f"{momentum:.0f}/100")
+        
+        with col4:
+            value = stock.get('value_score', 0)
+            st.metric("Value", f"{value:.0f}/100")
+        
+        # Signal Analysis
+        st.markdown("### 🎯 Signal Analysis")
+        st.info(f"""
+        **Reasoning:** {stock.get('explanation', 'Analysis based on 8-factor scoring system')}
+        
+        **Composite Score:** {stock.get('composite_score', 0):.1f}/100
+        """)
+        
+        # Factor scores breakdown
+        st.markdown("### 📈 Factor Scores")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown(f"**Momentum:** {stock.get('momentum_score', 0):.0f}/100")
+            st.markdown(f"**Value:** {stock.get('value_score', 0):.0f}/100")
+            st.markdown(f"**Growth:** {stock.get('growth_score', 0):.0f}/100")
+            st.markdown(f"**Volume:** {stock.get('volume_score', 0):.0f}/100")
+        
+        with col2:
+            st.markdown(f"**Technical:** {stock.get('technical_score', 0):.0f}/100")
+            st.markdown(f"**Sector:** {stock.get('sector_score', 0):.0f}/100")
+            st.markdown(f"**Risk:** {stock.get('risk_score', 0):.0f}/100")
+            st.markdown(f"**Quality:** {stock.get('quality_score', 0):.0f}/100")
 
 def render_market_summary(signals_df):
     """Render market summary metrics"""
@@ -313,8 +228,9 @@ def main():
     # Render header
     render_header()
     
-    # Load data button
+    # Control buttons
     col1, col2, col3 = st.columns([2, 1, 1])
+    
     with col1:
         if st.button("🚀 Load Market Intelligence", type="primary", use_container_width=True):
             signals_df = load_and_analyze_data()
@@ -330,7 +246,8 @@ def main():
         if st.button("📊 Health Check", use_container_width=True):
             health = st.session_state.data_loader.get_health()
             if health:
-                st.json(health['quality_analysis'])
+                with st.expander("System Health", expanded=True):
+                    st.json(health['quality_analysis'])
     
     # Check if we have data
     if 'signals_df' not in st.session_state:
@@ -344,7 +261,7 @@ def main():
         - 🧠 Clear reasoning for every signal
         - ⚡ 1-3 second performance
         
-        **No bugs. No crashes. Just pure market intelligence.**
+        **Simple. Powerful. Reliable.**
         """)
         return
     
@@ -364,7 +281,7 @@ def main():
     
     with tab1:
         # Top opportunities
-        st.markdown("### 🚀 Today's Top Opportunities")
+        st.markdown("## 🚀 Today's Top Opportunities")
         
         # Get top opportunities
         top_opps = st.session_state.signal_engine.get_top_opportunities(limit=CONFIG.MAX_OPPORTUNITIES)
@@ -372,13 +289,29 @@ def main():
         if top_opps.empty:
             st.warning("📭 No high-confidence opportunities found at this time.")
         else:
-            # Render each opportunity as a card
-            for _, stock in top_opps.iterrows():
+            # Show signal summary
+            signal_counts = top_opps['signal'].value_counts()
+            summary_cols = st.columns(len(signal_counts))
+            
+            for i, (signal, count) in enumerate(signal_counts.items()):
+                with summary_cols[i]:
+                    if signal == 'STRONG_BUY':
+                        st.success(f"🚀 {signal}: {count}")
+                    elif signal == 'BUY':
+                        st.success(f"📈 {signal}: {count}")
+                    else:
+                        st.info(f"📊 {signal}: {count}")
+            
+            st.markdown("---")
+            
+            # Render each opportunity
+            for idx, stock in top_opps.iterrows():
                 render_stock_card(stock)
+                st.markdown("---")
     
     with tab2:
         # All stocks view
-        st.markdown("### 📊 All Stocks Analysis")
+        st.markdown("## 📊 All Stocks Analysis")
         
         # Filters
         col1, col2, col3, col4 = st.columns(4)
@@ -421,66 +354,44 @@ def main():
             display_cols = [
                 'ticker', 'company_name', 'signal', 'confidence', 'composite_score',
                 'price', 'ret_1d', 'ret_30d', 'pe', 'eps_change_pct', 'rvol', 
-                'momentum_score', 'value_score', 'sector', 'category'
+                'sector', 'category'
             ]
             
             # Keep only available columns
             display_cols = [col for col in display_cols if col in filtered_df.columns]
             
-            # Format the dataframe for display
-            display_df = filtered_df[display_cols].copy()
-            
-            # Apply conditional formatting
+            # Display the dataframe
             st.dataframe(
-                display_df.head(CONFIG.MAX_TABLE_ROWS),
+                filtered_df[display_cols].head(CONFIG.MAX_TABLE_ROWS),
                 use_container_width=True,
-                height=600,
-                column_config={
-                    "ticker": st.column_config.TextColumn("Ticker", width="small"),
-                    "company_name": st.column_config.TextColumn("Company", width="medium"),
-                    "signal": st.column_config.TextColumn("Signal", width="small"),
-                    "confidence": st.column_config.ProgressColumn("Confidence", min_value=0, max_value=100),
-                    "composite_score": st.column_config.NumberColumn("Score", format="%.1f"),
-                    "price": st.column_config.NumberColumn("Price", format="₹%.0f"),
-                    "ret_1d": st.column_config.NumberColumn("1D%", format="%.1f%%"),
-                    "ret_30d": st.column_config.NumberColumn("30D%", format="%.1f%%"),
-                    "pe": st.column_config.NumberColumn("P/E", format="%.1f"),
-                    "eps_change_pct": st.column_config.NumberColumn("EPS Δ%", format="%.1f%%"),
-                    "rvol": st.column_config.NumberColumn("RVol", format="%.1fx"),
-                    "momentum_score": st.column_config.ProgressColumn("Momentum", min_value=0, max_value=100),
-                    "value_score": st.column_config.ProgressColumn("Value", min_value=0, max_value=100),
-                }
+                height=600
             )
         else:
             st.warning("No stocks match the selected filters")
     
     with tab3:
         # Signal distribution
-        st.markdown("### 📈 Signal Distribution Analysis")
+        st.markdown("## 📈 Signal Distribution Analysis")
         
         # Get signal counts
         signal_counts = signals_df['signal'].value_counts()
         
-        # Create columns for signal boxes
+        # Display signal distribution
+        st.markdown("### Signal Count Overview")
         cols = st.columns(len(signal_counts))
         
         for i, (signal, count) in enumerate(signal_counts.items()):
             with cols[i]:
-                color = CONFIG.SIGNAL_COLORS.get(signal, '#868e96')
                 percentage = (count / len(signals_df) * 100)
-                
-                st.markdown(f"""
-                <div style="text-align: center; padding: 1rem; background: {color}20; 
-                            border: 2px solid {color}; border-radius: 10px;">
-                    <h3 style="margin: 0; color: {color};">{signal}</h3>
-                    <p style="margin: 0.5rem 0 0 0; font-size: 2rem; font-weight: bold;">{count}</p>
-                    <p style="margin: 0; color: #666;">{percentage:.1f}%</p>
-                </div>
-                """, unsafe_allow_html=True)
+                st.metric(
+                    label=signal,
+                    value=count,
+                    delta=f"{percentage:.1f}%"
+                )
         
         # Sector performance
         if 'sector' in signals_df.columns:
-            st.markdown("### 🏢 Sector Analysis")
+            st.markdown("### 🏢 Top Sectors by Average Score")
             
             sector_summary = signals_df.groupby('sector').agg({
                 'signal': 'count',
@@ -489,21 +400,16 @@ def main():
             }).round(1)
             
             sector_summary.columns = ['Stock Count', 'Avg 30D Return %', 'Avg Score']
-            sector_summary = sector_summary.sort_values('Avg Score', ascending=False)
+            sector_summary = sector_summary.sort_values('Avg Score', ascending=False).head(10)
             
             st.dataframe(
                 sector_summary,
-                use_container_width=True,
-                column_config={
-                    "Stock Count": st.column_config.NumberColumn("Stocks", format="%d"),
-                    "Avg 30D Return %": st.column_config.NumberColumn("Avg 30D%", format="%.1f%%"),
-                    "Avg Score": st.column_config.ProgressColumn("Avg Score", min_value=0, max_value=100)
-                }
+                use_container_width=True
             )
     
     with tab4:
         # Export functionality
-        st.markdown("### 📋 Export Data")
+        st.markdown("## 📋 Export Data")
         
         col1, col2 = st.columns(2)
         
