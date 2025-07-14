@@ -434,4 +434,7 @@ class SignalEngine:
         return (positive / total * 100) if total > 0 else 50.0
 
 # Export
+# For backward compatibility, import from enhanced version
+from enhanced_signal_engine import EnhancedSignalEngine as SignalEngine
+
 __all__ = ['SignalEngine']
