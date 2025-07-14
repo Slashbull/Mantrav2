@@ -1,0 +1,8 @@
+# M.A.N.T.R.A. Final Production - Minimal, Essential Dependencies
+# Philosophy: Every dependency must earn its place
+
+streamlit==1.32.0
+pandas==2.2.0
+plotly==5.19.0
+numpy==1.26.3
+requests==2.31.0
