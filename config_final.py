@@ -61,14 +61,14 @@ SIGNAL_THRESHOLDS = {
 
 # Enhanced 8-factor scoring weights (precision optimized)
 FACTOR_WEIGHTS = {
-    "momentum": 0.25,        # Multi-timeframe momentum alignment
+    "momentum": 0.23,        # Multi-timeframe momentum alignment
     "value": 0.20,          # PE + earnings quality with context
     "growth": 0.18,         # EPS trends with sustainability check
     "volume": 0.15,         # Real interest confirmation
     "technical": 0.12,      # SMA trends + 52W position
     "sector": 0.06,         # Industry momentum alignment
     "risk": 0.04,           # Multi-dimensional risk assessment
-    "quality": 0.04         # Data completeness + anomaly detection (NEW)
+    "quality": 0.02         # Data completeness + anomaly detection (NEW)
 }
 
 # Confidence calibration for explainable AI
